@@ -39,19 +39,26 @@ public class MQTTBroker(
 
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        await InitAsync(cancellationToken);
-
-        var topics = configuration.GetSection("MQTT:Topics").Get<string[]>();
-
-        if (topics == null || topics.Length == 0) throw new Exception("No topics configured");
-
-        foreach (var topic in topics)
+        try
         {
-            await _mqttClient.SubscribeAsync(
-                new MqttTopicFilterBuilder().WithTopic(topic).Build(),
-                cancellationToken);
+            await InitAsync(cancellationToken);
 
-            logger.LogInformation("Subscribed to topic {Topic}", topic);
+            var topics = configuration.GetSection("MQTT:Topics").Get<string[]>();
+
+            if (topics == null || topics.Length == 0) throw new Exception("No topics configured");
+
+            foreach (var topic in topics)
+            {
+                await _mqttClient.SubscribeAsync(
+                    new MqttTopicFilterBuilder().WithTopic(topic).Build(),
+                    cancellationToken);
+
+                logger.LogInformation("Subscribed to topic {Topic}", topic);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error executing MQTT Broker");
         }
     }
     async Task Process(MqttApplicationMessageReceivedEventArgs e, CancellationToken cancellationToken)
@@ -61,8 +68,8 @@ public class MQTTBroker(
             if (e.ApplicationMessage.PayloadSegment.Array == null) throw new Exception("Payload is null");
 
             logger.LogInformation("Received message from topic {Topic}. Message {Message}",
-                   e.ApplicationMessage.Topic, e.ApplicationMessage.ConvertPayloadToString());                        
-            
+                   e.ApplicationMessage.Topic, e.ApplicationMessage.ConvertPayloadToString());
+
             // invoke pipeline 
             foreach (var channel in channelFactory.Writers(nameof(MQTTBroker)))
             {

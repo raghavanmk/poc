@@ -11,7 +11,14 @@ public class PPEDetectorService(IEnumerable<IModule> modules,ILogger<PPEDetector
             var tasks = modules.Select(module => module.ExecuteAsync(cancellationToken));
             await Task.WhenAll(tasks);
         }
-        catch(Exception ex)
+        catch (AggregateException ae)
+        {
+            foreach (var ex in ae.Flatten().InnerExceptions)
+            {
+                logger.LogError(ex, "Error executing modules {error}", ex.ToString());
+            }
+        }
+        catch (Exception ex)
         {
             logger.LogError(ex, "Error executing modules {error}", ex.ToString());
         }
