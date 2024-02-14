@@ -16,11 +16,11 @@ public class MailManager
 
     public MailManager(IConfiguration configuration, ILogger<MailManager> logger)
     {
-        string fromPassword = "bnwp vycw slfq stam";
-        string smtpHost = "smtp.gmail.com";
+        string fromPassword = configuration["SMTP:Password"]!;
+        string smtpHost = configuration["SMTP:HOST"]!;
         int smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
 
-        fromAddress = new MailAddress("raghavan.mk@gmail.com", "Raghavan");
+        fromAddress = new MailAddress(configuration["SMTP:ADDRESS"]!, configuration["SMTP:DISPLAYNAME"]!);
 
         smtpClient = new SmtpClient
         {
