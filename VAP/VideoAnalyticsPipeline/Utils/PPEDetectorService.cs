@@ -15,12 +15,12 @@ public class PPEDetectorService(IEnumerable<IModule> modules,ILogger<PPEDetector
         {
             foreach (var ex in ae.Flatten().InnerExceptions)
             {
-                logger.LogError(ex, "Error executing modules {error}", ex.ToString());
+                logger.LogError(ex, "Error executing modules");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error executing modules {error}", ex.ToString());
+            logger.LogError(ex, "Error executing modules");
         }
     }
 }
