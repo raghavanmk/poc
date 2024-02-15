@@ -52,3 +52,10 @@ public class ModelInference
     public int[]? Class { get; set; }
     public float Confidence { get; set; }
 }
+
+public class Detection
+{
+    public Output? Output { get; set; }
+    public string? CameraSerial { get; set; }
+    public long Timestamp { get; set; }
+}
