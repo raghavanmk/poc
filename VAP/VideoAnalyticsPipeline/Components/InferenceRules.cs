@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
+using KdTree;
+using KdTree.Math;
+using Microsoft.Extensions.Configuration;
 
 namespace VideoAnalyticsPipeline;
 
-internal class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogger<InferenceRules> logger)
+public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogger<InferenceRules> logger, IConfiguration configuration, IDictionary<string, KdTree<float, Detection>> violationTree)
 { 
     public bool TryDetectViolation(Data data, out Output[] violations)
     {
@@ -12,10 +15,44 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILo
                         CheckCoordinateBounds(o.Location!)
                         && !cache.TryCheckIfCoordinatesAreProcessed(o.Location!, data.Inference.Timestamp, data.CameraSerial!,o.Class,o.Score)
                         && modelInference!.Class!.Contains(o.Class)
-                        && o.Score > modelInference.Confidence).ToArray()
+                        && o.Score > modelInference.Confidence
+                        && checkViolation(o, data.CameraSerial!, data.Inference.Timestamp)).ToArray()
                         ?? [];
 
         return violations.Length > 0;
+    }
+    public bool checkViolation(Output output, string cameraSerial, long timeStamp)
+    {
+        var key = GenerateKey(output.Location!, cameraSerial);
+
+        KdTree<float, Detection> tree;
+
+        if (!violationTree.TryGetValue(key, out tree))
+        {
+            tree = new KdTree<float, Detection>(4, new FloatMath());
+            violationTree[key] = tree;
+        }
+
+        var allneighbors = tree.RadialSearch(output.Location, configuration.GetValue<float>("InferenceCache:RadiusLimit")).ToArray(); 
+
+        var filteredNeighbors = allneighbors.Length > 0 ? filterNeighbors(allneighbors, cameraSerial!) : null;
+
+        var detection = new Detection
+        {
+            Output = output,
+            CameraSerial = cameraSerial,
+            Timestamp = timeStamp
+        };
+     
+        if ((tree.Any() && timeStamp - tree.Max(n => n.Value.Timestamp) < configuration.GetValue<int>("InferenceCache:Timeout")) ||
+             filteredNeighbors.Any(n => timeStamp - n.Value.Timestamp < configuration.GetValue<int>("InferenceCache:Timeout")))
+        {
+            tree.Add(output.Location, detection);
+            return false;
+        }
+
+        tree.Add(output.Location, detection);
+        return true;
     }
 
     bool CheckCoordinateBounds(float[] coordinates)
@@ -26,5 +63,20 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILo
             logger.LogError("Coordinate bounds {coordinates} are not within 0 and 1. This will not be processed further", coordinates);
 
         return bounds;
+    }
+
+    string GenerateKey(float[] coordinates, string camSerial)
+    {
+        return string.Join(",", coordinates) + "," + camSerial;
+    }
+
+    public KdTreeNode<float, Detection>[] filterNeighbors(KdTreeNode<float, Detection>[] neighbors, string camSerial)
+    {
+        List<KdTreeNode<float, Detection>> filtered = new List<KdTreeNode<float, Detection>>();
+        foreach (var neighbor in neighbors)
+        {
+            if (neighbor.Value.CameraSerial == camSerial) filtered.Add(neighbor);
+        }
+        return filtered.ToArray();
     }
 }
