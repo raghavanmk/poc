@@ -25,17 +25,17 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
     {
         var key = GenerateKey(output.Location!, cameraSerial);
 
-        KdTree<float, Detection> tree;
-
-        if (!violationTree.TryGetValue(key, out tree))
+        if (!violationTree.TryGetValue(key, out var tree))
         {
-            tree = new KdTree<float, Detection>(4, new FloatMath());
+            tree = new KdTree<float, Detection>(2, new FloatMath());
             violationTree[key] = tree;
         }
 
-        var allneighbors = tree.RadialSearch(output.Location, configuration.GetValue<float>("InferenceCache:RadiusLimit")).ToArray(); 
+        var centre = RectCentre(output.Location!);
 
-        var filteredNeighbors = allneighbors.Length > 0 ? filterNeighbors(allneighbors, cameraSerial!) : null;
+        var allneighbors = tree.RadialSearch(centre, configuration.GetValue<float>("InferenceCache:RadiusLimit")).ToArray(); 
+
+        var filteredNeighbors = allneighbors.Length > 0 ? filterNeighbors(allneighbors, cameraSerial!) : [];
 
         var detection = new Detection
         {
@@ -47,11 +47,11 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
         if ((tree.Any() && timeStamp - tree.Max(n => n.Value.Timestamp) < configuration.GetValue<int>("InferenceCache:Timeout")) ||
              filteredNeighbors.Any(n => timeStamp - n.Value.Timestamp < configuration.GetValue<int>("InferenceCache:Timeout")))
         {
-            tree.Add(output.Location, detection);
+            tree.Add(centre, detection);
             return false;
         }
 
-        tree.Add(output.Location, detection);
+        tree.Add(centre, detection);
         return true;
     }
 
@@ -78,5 +78,13 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
             if (neighbor.Value.CameraSerial == camSerial) filtered.Add(neighbor);
         }
         return filtered.ToArray();
+    }
+
+    float[] RectCentre(float[] coordinates)
+    {
+        var x = (coordinates[0] + coordinates[2])/2;
+        var y = (coordinates[1] + coordinates[3])/2;
+
+        return [x, y];   
     }
 }
