@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+using KdTree;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -39,7 +40,7 @@ public static class PipelineExtn
             services.AddSingleton<MerakiAPIProxy>();
             services.AddSingleton<MailManager>();
             services.AddHostedService<PPEDetectorService>();
-           
+            services.AddSingleton<IDictionary<string, KdTree<float, Detection>>>(new Dictionary<string, KdTree<float, Detection>>());
         }
         catch (Exception ex)
         {
