@@ -18,22 +18,19 @@ public class RoundFloatArrayConverter : JsonConverter<float[]>
 {
     public override float[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType != JsonTokenType.StartArray)
-        {
-            throw new JsonException();
-        }
-
-        var values = new List<float>();
+        if (reader.TokenType != JsonTokenType.StartArray)        
+            throw new JsonException();        
+        
+        var values = new float[4];
+        var index = 0;
 
         while (reader.Read())
         {
-            if (reader.TokenType == JsonTokenType.EndArray)
-            {
-                return values.Select(value => (float)Math.Round(value, 2)).ToArray();
-            }
+            if (reader.TokenType == JsonTokenType.EndArray)            
+                return values;            
 
             float value = reader.GetSingle();
-            values.Add(value);
+            values[index++] = (float)Math.Round(value, 2);
         }
 
         throw new JsonException();
