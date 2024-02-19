@@ -15,7 +15,7 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
                 if (image != null)
                 {
                     var boundedBoxImg = await DrawBoundingBox(image.ImageStream!, data.Inference!.Timestamp,
-                                                data.Inference!.Outputs!.Select(o => o.LocationRounded)!,
+                                                data.Inference!.Outputs!.Select(o => o.Location)!,
                                                 cancellationToken);
 
                     if (boundedBoxImg != null)

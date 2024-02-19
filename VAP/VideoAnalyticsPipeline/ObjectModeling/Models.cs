@@ -21,15 +21,7 @@ public class Output
     public int Class { get; set; }
     public int Id { get; set; }
     // location values contain normalized coordinates of the bounding box. it follows [ymin, xmin, ymax, xmax] format
-    public float[]? Location { get; set; }
-    [JsonIgnore]
-    public float[] LocationRounded
-    {
-        get
-        {
-            return Location!.Select(coord => (float)Math.Round(coord, 2)).ToArray();
-        }
-    }
+    public float[]? Location {  get; set; }    
     public float Score { get; set; }
 }
 

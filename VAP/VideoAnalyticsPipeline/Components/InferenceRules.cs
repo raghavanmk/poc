@@ -12,8 +12,8 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
         var modelInference = modelConfig[data.CameraSerial!];
 
         violations = data.Inference?.Outputs?.Where(o =>
-                        CheckCoordinateBounds(o.LocationRounded)
-                        && !cache.TryCheckIfCoordinatesAreProcessed(o.LocationRounded, data.Inference.Timestamp, data.CameraSerial!,o.Class,o.Score)
+                        CheckCoordinateBounds(o.Location)
+                        && !cache.TryCheckIfCoordinatesAreProcessed(o.Location, data.Inference.Timestamp, data.CameraSerial!,o.Class,o.Score)
                         && modelInference!.Class!.Contains(o.Class)
                         && o.Score > modelInference.Confidence
                         && CheckViolation(o, data.CameraSerial!, data.Inference.Timestamp)).ToArray()
@@ -23,7 +23,7 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
     }
     public bool CheckViolation(Output output, string cameraSerial, long timeStamp)
     {
-        var key = GenerateKey(output.LocationRounded, cameraSerial);
+        var key = GenerateKey(output.Location, cameraSerial);
 
         if (!violationTree.TryGetValue(key, out var tree))
         {
@@ -31,7 +31,7 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
             violationTree[key] = tree;
         }
 
-        var centre = RectCentre(output.LocationRounded);
+        var centre = RectCentre(output.Location);
 
         var allneighbors = tree.RadialSearch(centre, configuration.GetValue<float>("InferenceCache:RadiusLimit")).ToArray(); 
 
