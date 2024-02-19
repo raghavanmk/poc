@@ -67,7 +67,7 @@ public class InferenceRulesTests
         var timeStamp = 1706679640040;
 
         //Act
-        var result = inferenceRules.checkViolation(output, cameraSerial, timeStamp);
+        var result = inferenceRules.CheckViolation(output, cameraSerial, timeStamp);
 
         //Assert
         Assert.True(result);
@@ -83,7 +83,7 @@ public class InferenceRulesTests
         var timeStamp = 1706679600040;
 
         //Act
-        var result = inferenceRules.checkViolation(output, cameraSerial, timeStamp);
+        var result = inferenceRules.CheckViolation(output, cameraSerial, timeStamp);
 
         //Assert
         Assert.False(result);
@@ -98,7 +98,7 @@ public class InferenceRulesTests
         var timeStamp = 1706679600040;
 
         //Act
-        var result = inferenceRules.checkViolation(output, cameraSerial, timeStamp);
+        var result = inferenceRules.CheckViolation(output, cameraSerial, timeStamp);
 
         //Assert
         Assert.True(result);

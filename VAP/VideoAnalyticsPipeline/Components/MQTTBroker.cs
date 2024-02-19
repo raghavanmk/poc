@@ -49,9 +49,7 @@ public class MQTTBroker(
 
             foreach (var topic in topics)
             {
-                await _mqttClient.SubscribeAsync(
-                    new MqttTopicFilterBuilder().WithTopic(topic).Build(),
-                    cancellationToken);
+                await _mqttClient.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build(), cancellationToken);
 
                 logger.LogInformation("Subscribed to topic {Topic}", topic);
             }
@@ -75,7 +73,7 @@ public class MQTTBroker(
             {
                 var camSerial = e.ApplicationMessage.Topic.Split('/')[2];
                 var inference = await ObjectFormatter.DeserializeAsync<Inference>(e.ApplicationMessage.PayloadSegment.Array, cancellationToken);
-                if(inference != null) ObjectFormatter.RoundLocationCoordinates(inference);
+                //if(inference != null) ObjectFormatter.RoundLocationCoordinates(inference);
                 await channel.WriteAsync(new Data { Inference = inference, CameraSerial = camSerial }, cancellationToken);
             }
         }

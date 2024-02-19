@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Serilog.Core;
 
+namespace VideoAnalyticsPipeline;
 public static class HttpClientExtn
 {
     public static IServiceCollection AddHttpClientPolicy(this IServiceCollection services, Logger logger, IConfiguration configuration)

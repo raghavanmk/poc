@@ -32,7 +32,7 @@ public class InferenceCache(IConfiguration configuration, ILogger<InferenceCache
         }
         else
         {
-            if (_cache.TryAdd(GenerateKey(coordinates, camSerial, classId, confidence), timeStamp))
+            if (_cache.TryAdd(key, timeStamp))
                 return false;
             throw new InvalidOperationException("Failed to add coordinates to cache");
         }

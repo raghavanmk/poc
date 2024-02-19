@@ -15,7 +15,7 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
                 if (image != null)
                 {
                     var boundedBoxImg = await DrawBoundingBox(image.ImageStream!, data.Inference!.Timestamp,
-                                                data.Inference!.Outputs!.Select(o => o.Location)!,
+                                                data.Inference!.Outputs!.Select(o => o.LocationRounded)!,
                                                 cancellationToken);
 
                     if (boundedBoxImg != null)
@@ -73,10 +73,6 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
 
                     // Draw the rectangle on the canvas
                     canvas.DrawRect(rect, paint);
-
-                    //logger.LogInformation("Saving output image");
-                    //using var outputStream = File.OpenWrite($"output_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.jpeg");
-                    //outputImage.Encode(outputStream, SKEncodedImageFormat.Jpeg, 100);
 
                 }
                 return outputImage;

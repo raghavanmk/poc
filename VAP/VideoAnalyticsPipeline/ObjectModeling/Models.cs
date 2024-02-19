@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace VideoAnalyticsPipeline;
 
@@ -20,7 +21,15 @@ public class Output
     public int Class { get; set; }
     public int Id { get; set; }
     // location values contain normalized coordinates of the bounding box. it follows [ymin, xmin, ymax, xmax] format
-    public float[]? Location { get; set; } 
+    public float[]? Location { private get; set; }
+    [JsonIgnore]
+    public float[] LocationRounded
+    {
+        get
+        {
+            return Location!.Select(coord => (float)Math.Round(coord, 2)).ToArray();
+        }
+    }
     public float Score { get; set; }
 }
 
@@ -33,16 +42,21 @@ public class ModelConfig
 {
     public Dictionary<string, ModelInference>? Models { get; set; }
 
-    public ModelInference ModelInference(string cameraSerial)
+    public ModelInference this[string cameraSerial]
     {
-        if(Models!.TryGetValue(cameraSerial, out var modelInference))
-            return modelInference;
-        return Models!["Shared"];
+        get
+        {
+            if (Models!.TryGetValue(cameraSerial, out var modelInference))
+                return modelInference;
+
+            return Models!["Shared"];
+        }
     }
     public float ModelConfidence(string cameraSerial)
     {
-        if(Models!.TryGetValue(cameraSerial, out var modelInference))
+        if (Models!.TryGetValue(cameraSerial, out var modelInference))
             return modelInference.Confidence;
+
         return Models!["Shared"].Confidence;
     }
 }

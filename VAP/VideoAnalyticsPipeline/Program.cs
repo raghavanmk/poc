@@ -14,10 +14,7 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
    Host.CreateDefaultBuilder(args)
         .ConfigureAppConfiguration((hostContext, config) =>
         {
-            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-            config.AddJsonFile("appsettings.serilog.json", optional: false, reloadOnChange: true);
-            config.AddEnvironmentVariables();
-            config.AddCommandLine(args);
+            config.AddJsonFile("appsettings.serilog.json", optional: false, reloadOnChange: true);         
         })
        .ConfigureServices((hostContext, services) =>
        {
