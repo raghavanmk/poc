@@ -72,8 +72,7 @@ public class MQTTBroker(
             foreach (var channel in channelFactory.Writers(nameof(MQTTBroker)))
             {
                 var camSerial = e.ApplicationMessage.Topic.Split('/')[2];
-                var inference = await ObjectFormatter.DeserializeAsync<Inference>(e.ApplicationMessage.PayloadSegment.Array, cancellationToken);
-                //if(inference != null) ObjectFormatter.RoundLocationCoordinates(inference);
+                var inference = await ObjectFormatter.DeserializeAsync<Inference>(e.ApplicationMessage.PayloadSegment.Array, cancellationToken);                
                 await channel.WriteAsync(new Data { Inference = inference, CameraSerial = camSerial }, cancellationToken);
             }
         }
