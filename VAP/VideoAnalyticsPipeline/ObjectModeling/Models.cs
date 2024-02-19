@@ -21,7 +21,7 @@ public class Output
     public int Class { get; set; }
     public int Id { get; set; }
     // location values contain normalized coordinates of the bounding box. it follows [ymin, xmin, ymax, xmax] format
-    public float[]? Location { private get; set; }
+    public float[]? Location { get; set; }
     [JsonIgnore]
     public float[] LocationRounded
     {
