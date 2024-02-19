@@ -16,7 +16,7 @@ public class InferenceRulesTests
         mockConfigurationSection.SetupGet(m => m.Value).Returns("180000");
 
         var mockRadiusConfigurationSection = new Mock<IConfigurationSection>();
-        mockRadiusConfigurationSection.SetupGet(m => m.Value).Returns("1.0");
+        mockRadiusConfigurationSection.SetupGet(m => m.Value).Returns("3.0");
 
         var mockConfiguration = new Mock<IConfiguration>();
         mockConfiguration.Setup(a => a.GetSection("InferenceCache:Timeout"))
@@ -41,21 +41,21 @@ public class InferenceRulesTests
 
          var violationTreeMock = new Mock<Dictionary<string, KdTree<float, Detection>>>();
 
-         var tree1 = new KdTree<float, Detection>(4, new FloatMath()){{ 
-                    new[] { 1.0f, 2.0f, 3.0f, 4.0f }, new Detection { CameraSerial = "Q2UV-5LPF-HURS", Timestamp = 1706679450040, Output = new Output { Class = 1, Id = 1, Location = new[] { 1.0f, 2.0f, 3.0f, 4.0f }, Score = 8.75f } }
+         var tree1 = new KdTree<float, Detection>(2, new FloatMath()){{ 
+                    new[] { 2.0f, 3.0f }, new Detection { CameraSerial = "Q2UV-5LPF-HURS", Timestamp = 1706679450040, Output = new Output { Class = 1, Id = 1, Location = new[] { 1.0f, 2.0f, 3.0f, 4.0f }, Score = 8.75f } }
          }};
-         var tree2 = new KdTree<float, Detection>(4, new FloatMath()){{
-                    new[] { 4.0f, 5.0f, 6.0f, 7.0f }, new Detection { CameraSerial = "Q2UV-5LPF-HURS", Timestamp = 1708679460040, Output = new Output { Class = 1, Id = 1, Location = new[] { 4.0f, 5.0f, 6.0f, 7.0f }, Score = 8.75f } }
+         var tree2 = new KdTree<float, Detection>(2, new FloatMath()){{
+                    new[] { 10.0f, 6.0f }, new Detection { CameraSerial = "Q2UV-5LPF-HURS", Timestamp = 1708679460040, Output = new Output { Class = 1, Id = 1, Location = new[] { 4.0f, 5.0f, 6.0f, 7.0f }, Score = 8.75f } }
          }};
-         var tree3 = new KdTree<float, Detection>(4, new FloatMath()){{
-                    new[] { 1.0f, 2.0f, 3.0f, 4.0f }, new Detection { CameraSerial = "Q2UV-9LPF-KURS", Timestamp = 1708679470040, Output = new Output { Class = 1, Id = 1, Location = new[] { 1.0f, 2.0f, 3.0f, 4.0f }, Score = 8.75f } }
+         var tree3 = new KdTree<float, Detection>(2, new FloatMath()){{
+                    new[] { 2.0f, 3.0f }, new Detection { CameraSerial = "Q2UV-9LPF-KURS", Timestamp = 1708679470040, Output = new Output { Class = 1, Id = 1, Location = new[] { 1.0f, 2.0f, 3.0f, 4.0f }, Score = 8.75f } }
          }};
 
          violationTreeMock.Object.Add("1,2,3,4,Q2UV-5LPF-HURS", tree1);
          violationTreeMock.Object.Add("4,5,6,7,Q2UV-5LPF-HURS", tree2);
          violationTreeMock.Object.Add("1,2,3,4,Q2UV-9LPF-KURS", tree3);
-
-         inferenceRules = new InferenceRules(modelConfig, null, mockLogger.Object, mockConfiguration.Object, violationTreeMock.Object);
+         
+        inferenceRules = new InferenceRules(modelConfig, null, mockLogger.Object, mockConfiguration.Object, violationTreeMock.Object);
      }
 
      [Fact]
@@ -77,7 +77,8 @@ public class InferenceRulesTests
      public void CheckViolation_WhenTimeoutViolationDetected_ReturnFalse()
      {
         //Arrange
-        var output = new Output { Location = new float[] { 1.0f, 2.0f, 3.0f, 4.0f } };
+        var coordinates = new float[] { 1.0f, 2.0f, 3.0f, 4.0f };
+        var output = new Output { Location = coordinates };
         var cameraSerial = "Q2UV-5LPF-HURS";
         var timeStamp = 1706679600040;
 
