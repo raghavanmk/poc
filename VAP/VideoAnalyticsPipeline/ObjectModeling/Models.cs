@@ -62,6 +62,5 @@ public class ModelInference
 public class Detection
 {
     public Output? Output { get; set; }
-    public string? CameraSerial { get; set; }
     public long Timestamp { get; set; }
 }

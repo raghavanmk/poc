@@ -5,8 +5,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace VideoAnalyticsPipeline;
 
-public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogger<InferenceRules> logger, IConfiguration configuration, IDictionary<string, KdTree<float, Detection>> violationTree)
-{ 
+public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogger<InferenceRules> logger, IConfiguration configuration)
+{
+    private readonly IDictionary<string, KdTree<float, Detection>> kdTreeDict = new Dictionary<string, KdTree<float, Detection>>();
     public bool TryDetectViolation(Data data, out Output[] violations)
     {
         var modelInference = modelConfig[data.CameraSerial!];
@@ -16,43 +17,31 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
                         && !cache.TryCheckIfCoordinatesAreProcessed(o.Location, data.Inference.Timestamp, data.CameraSerial!,o.Class,o.Score)
                         && modelInference!.Class!.Contains(o.Class)
                         && o.Score > modelInference.Confidence
-                        && CheckViolation(o, data.CameraSerial!, data.Inference.Timestamp)).ToArray()
+                        && !CheckIfNeighborsAreSimilar(o, data.CameraSerial!, data.Inference.Timestamp)).ToArray()
                         ?? [];
 
         return violations.Length > 0;
     }
-    public bool CheckViolation(Output output, string cameraSerial, long timeStamp)
+    public bool CheckIfNeighborsAreSimilar(Output output, string cameraSerial, long timestamp)
     {
-        var key = GenerateKey(output.Location, cameraSerial);
-
-        if (!violationTree.TryGetValue(key, out var tree))
+        if (!kdTreeDict.TryGetValue(cameraSerial, out var tree))
         {
             tree = new KdTree<float, Detection>(2, new FloatMath());
-            violationTree[key] = tree;
+            kdTreeDict[cameraSerial] = tree;
         }
+        var centre = CoordsCentre(output.Location!);
+        var neighbors = tree.RadialSearch(centre, configuration.GetValue<float>("InferenceCache:RadiusLimit")).ToArray();
 
-        var centre = RectCentre(output.Location);
-
-        var allneighbors = tree.RadialSearch(centre, configuration.GetValue<float>("InferenceCache:RadiusLimit")).ToArray(); 
-
-        var filteredNeighbors = allneighbors.Length > 0 ? filterNeighbors(allneighbors, cameraSerial!) : [];
+        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < configuration.GetValue<float>("InferenceCache:Timeout"))) return true;
 
         var detection = new Detection
         {
             Output = output,
-            CameraSerial = cameraSerial,
-            Timestamp = timeStamp
+            Timestamp = timestamp,
         };
-     
-        if ((tree.Any() && timeStamp - tree.Max(n => n.Value.Timestamp) < configuration.GetValue<int>("InferenceCache:Timeout")) ||
-             filteredNeighbors.Any(n => timeStamp - n.Value.Timestamp < configuration.GetValue<int>("InferenceCache:Timeout")))
-        {
-            tree.Add(centre, detection);
-            return false;
-        }
 
         tree.Add(centre, detection);
-        return true;
+        return false;
     }
 
     bool CheckCoordinateBounds(float[] coordinates)
@@ -65,26 +54,12 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
         return bounds;
     }
 
-    string GenerateKey(float[] coordinates, string camSerial)
+    float[] CoordsCentre(float[] coordinates)
     {
-        return string.Join(",", coordinates) + "," + camSerial;
-    }
+        //Format : [ymin, xmin, ymax, xmax]
+        var x = (float)Math.Round((coordinates[1] + coordinates[3]) / 2, 3);
+        var y = (float)Math.Round((coordinates[0] + coordinates[2]) / 2, 3);
 
-    public KdTreeNode<float, Detection>[] filterNeighbors(KdTreeNode<float, Detection>[] neighbors, string camSerial)
-    {
-        List<KdTreeNode<float, Detection>> filtered = new List<KdTreeNode<float, Detection>>();
-        foreach (var neighbor in neighbors)
-        {
-            if (neighbor.Value.CameraSerial == camSerial) filtered.Add(neighbor);
-        }
-        return filtered.ToArray();
-    }
-
-    float[] RectCentre(float[] coordinates)
-    {
-        var x = (coordinates[0] + coordinates[2])/2;
-        var y = (coordinates[1] + coordinates[3])/2;
-
-        return [x, y];   
+        return [x, y];
     }
 }
