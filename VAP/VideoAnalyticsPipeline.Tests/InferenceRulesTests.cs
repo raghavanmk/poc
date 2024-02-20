@@ -1,5 +1,3 @@
-using KdTree;
-using KdTree.Math;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -7,121 +5,64 @@ using Moq;
 namespace VideoAnalyticsPipeline.Tests;
 public class InferenceRulesTests
 {
-
-     private readonly InferenceRules inferenceRules;
-     public InferenceRulesTests()
-     {
+    private readonly InferenceRules inferenceRules;
+    public InferenceRulesTests()
+    {
         // Arrange
-        var mockConfigurationSection = new Mock<IConfigurationSection>();
-        mockConfigurationSection.SetupGet(m => m.Value).Returns("180000");
+        var mockTimeoutConfigurationSection = new Mock<IConfigurationSection>();
+        mockTimeoutConfigurationSection.SetupGet(m => m.Value).Returns("180000");
 
         var mockRadiusConfigurationSection = new Mock<IConfigurationSection>();
-        mockRadiusConfigurationSection.SetupGet(m => m.Value).Returns("3.0");
+        mockRadiusConfigurationSection.SetupGet(m => m.Value).Returns("0.2");
 
         var mockConfiguration = new Mock<IConfiguration>();
-        mockConfiguration.Setup(a => a.GetSection("InferenceCache:Timeout"))
-                        .Returns(mockConfigurationSection.Object);
         mockConfiguration.Setup(a => a.GetSection("InferenceCache:RadiusLimit"))
-                        .Returns(mockRadiusConfigurationSection.Object);
-
-
+                         .Returns(mockRadiusConfigurationSection.Object);
+        mockConfiguration.Setup(a => a.GetSection("InferenceCache:Timeout"))
+                         .Returns(mockTimeoutConfigurationSection.Object);
         var modelConfig = new ModelConfig
-         {
-             Models = new Dictionary<string, ModelInference>
-             {
-                 ["Shared"] = new ModelInference
-                 {
-                     Confidence = 0.7f,
-                     Class = [1, 2]
-                 }
-             }
-         };
-
-         var mockLogger = new Mock<ILogger<InferenceRules>>();
-
-         var violationTreeMock = new Mock<Dictionary<string, KdTree<float, Detection>>>();
-
-         var tree1 = new KdTree<float, Detection>(2, new FloatMath()){{ 
-                    new[] { 2.0f, 3.0f }, new Detection { CameraSerial = "Q2UV-5LPF-HURS", Timestamp = 1706679450040, Output = new Output { Class = 1, Id = 1, Location = new[] { 1.0f, 2.0f, 3.0f, 4.0f }, Score = 8.75f } }
-         }};
-         var tree2 = new KdTree<float, Detection>(2, new FloatMath()){{
-                    new[] { 10.0f, 6.0f }, new Detection { CameraSerial = "Q2UV-5LPF-HURS", Timestamp = 1708679460040, Output = new Output { Class = 1, Id = 1, Location = new[] { 4.0f, 5.0f, 6.0f, 7.0f }, Score = 8.75f } }
-         }};
-         var tree3 = new KdTree<float, Detection>(2, new FloatMath()){{
-                    new[] { 2.0f, 3.0f }, new Detection { CameraSerial = "Q2UV-9LPF-KURS", Timestamp = 1708679470040, Output = new Output { Class = 1, Id = 1, Location = new[] { 1.0f, 2.0f, 3.0f, 4.0f }, Score = 8.75f } }
-         }};
-
-         violationTreeMock.Object.Add("1,2,3,4,Q2UV-5LPF-HURS", tree1);
-         violationTreeMock.Object.Add("4,5,6,7,Q2UV-5LPF-HURS", tree2);
-         violationTreeMock.Object.Add("1,2,3,4,Q2UV-9LPF-KURS", tree3);
-         
-        inferenceRules = new InferenceRules(modelConfig, null, mockLogger.Object, mockConfiguration.Object, violationTreeMock.Object);
-     }
-
-     [Fact]
-     public void CheckViolation_WhenNoTimeoutViolation_ReturnsTrue()
-     {
-        //Arrange
-        var output = new Output { Location = new float[] { 1.0f, 2.0f, 3.0f, 4.0f } };
-        var cameraSerial = "Q2UV-5LPF-HURS";
-        var timeStamp = 1706679640040;
-
-        //Act
-        var result = inferenceRules.CheckViolation(output, cameraSerial, timeStamp);
-
-        //Assert
-        Assert.True(result);
-     }
-
-     [Fact]
-     public void CheckViolation_WhenTimeoutViolationDetected_ReturnFalse()
-     {
-        //Arrange
-        var coordinates = new float[] { 1.0f, 2.0f, 3.0f, 4.0f };
-        var output = new Output { Location = coordinates };
-        var cameraSerial = "Q2UV-5LPF-HURS";
-        var timeStamp = 1706679600040;
-
-        //Act
-        var result = inferenceRules.CheckViolation(output, cameraSerial, timeStamp);
-
-        //Assert
-        Assert.False(result);
-     }
-
-     [Fact]
-     public void CheckViolation_Neighbors_DifferentCamera_ReturnTrue()
-     {
-        //Arrange
-        var output = new Output { Location = new float[] { 4.0f, 5.0f, 6.0f, 7.0f } };
-        var cameraSerial = "Q2UV-9LPF-KURS";
-        var timeStamp = 1706679600040;
-
-        //Act
-        var result = inferenceRules.CheckViolation(output, cameraSerial, timeStamp);
-
-        //Assert
-        Assert.True(result);
-     }
-
-    [Fact]
-     public void FilterNeighbors_Returns_Filtered_Neighbors()
-     {
-        // Arrange
-        var cameraSerial = "Q2UV-5LPF-HURS";
-        var neighbors = new[]
         {
-            new KdTreeNode<float, Detection>(new float[] {0.1f, 0.2f, 0.3f, 0.4f}, new Detection { CameraSerial = "Q2UV-5LPF-HURS" }),
-            new KdTreeNode<float, Detection>(new float[] {0.5f, 0.6f, 0.7f, 0.8f}, new Detection { CameraSerial = "Q2UV-9LPF-HURS" }),
-            new KdTreeNode<float, Detection>(new float[] {0.9f, 0.8f, 0.7f, 0.6f}, new Detection { CameraSerial = "Q2UV-5LPF-HURS" }),
+            Models = new Dictionary<string, ModelInference>
+            {
+                ["Shared"] = new ModelInference
+                {
+                    Confidence = 0.7f,
+                    Class = [1, 2]
+                }
+            }
         };
 
-        // Act
-        var filtered = inferenceRules.filterNeighbors(neighbors, cameraSerial);
+        var mockLogger = new Mock<ILogger<InferenceRules>>();
+        var cacheMockLogger = new Mock<ILogger<InferenceCache>>();
 
-        // Assert
-        Assert.Equal(2, filtered.Length);
-        Assert.All(filtered, n => Assert.Equal(cameraSerial, n.Value.CameraSerial));
-     }
+        var inferenceCache = new InferenceCache(mockConfiguration.Object, cacheMockLogger.Object, modelConfig);
+
+        inferenceRules = new InferenceRules(modelConfig, inferenceCache, mockLogger.Object, mockConfiguration.Object);
+    }
+
+    [Fact]
+    public void CheckIfNeighborsAreSimililar_Tests()
+    {
+        //Arrange
+        var testData = new List<(string, Output, long, bool)>
+         {
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = new[] { 0.24f, 0.12f, 0.46f, 0.31f }, Score = 8.75f }, 1706679450030, false),
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = new[] { 0.24f, 0.12f, 0.46f, 0.31f }, Score = 8.75f }, 1706679550030, true),
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = new[] { 0.24f, 0.12f, 0.46f, 0.31f }, Score = 8.75f }, 1706679640030, false),
+             new ("Q2UV-9LPF-KURS", new Output { Class = 1, Id = 3, Location = new[] { 0.36f, 0.27f, 0.58f, 0.46f }, Score = 8.75f }, 1706679480030, false),
+             new ("Q2UV-5LPF-HURS", new Output { Class = 4, Id = 4, Location = new[] { 0.41f, 0.28f, 0.62f, 0.47f }, Score = 8.75f }, 1706679660030, false),
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 5, Location = new[] { 0.31f, 0.18f, 0.52f, 0.37f }, Score = 8.75f }, 1706679680030, true),
+             new ("Q2UV-9LPF-KURS", new Output { Class = 1, Id = 6, Location = new[] { 0.46f, 0.23f, 0.68f, 0.51f }, Score = 8.75f }, 1706679500030, true),
+         };
+
+        foreach (var (cameraSerial, output, timestamp, isProcessed) in testData)
+        {
+            //Act
+            var result = inferenceRules.CheckIfNeighborsAreSimilar(output, cameraSerial, timestamp);
+
+            //Assert
+            Assert.Equal(isProcessed, result);
+        }
+    }
 
 }

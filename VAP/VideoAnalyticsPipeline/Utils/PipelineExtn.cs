@@ -40,7 +40,7 @@ public static class PipelineExtn
             services.AddSingleton<MerakiAPIProxy>();
             services.AddSingleton<MailManager>();
             services.AddHostedService<PPEDetectorService>();
-            services.AddSingleton<IDictionary<string, KdTree<float, Detection>>>(new Dictionary<string, KdTree<float, Detection>>());
+
         }
         catch (Exception ex)
         {
