@@ -72,8 +72,7 @@ internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> l
         }
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
-    {
-        // will there be scenario where any coordinate is a neighbour ? like if we keep adding coordinates as ones neighbour ?
+    {        
         // should class id be considered ?
 
         if (!kdTree.TryGetValue(cameraSerial, out var tree))
