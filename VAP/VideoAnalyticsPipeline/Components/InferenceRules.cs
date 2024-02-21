@@ -8,7 +8,7 @@ namespace VideoAnalyticsPipeline;
 
 internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> logger, IConfiguration configuration)
 {
-    private const int kdTreeDimensions = 2;
+    private const int kdTreeDimension = 2;
     private const float coordinateLowerBound = 0;
     private const float coordinateUpperBound = 1;
 
@@ -77,11 +77,11 @@ internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> l
 
         if (!kdTree.TryGetValue(cameraSerial, out var tree))
         {
-            tree = new KdTree<float, Detection>(kdTreeDimensions, new FloatMath());
+            tree = new KdTree<float, Detection>(kdTreeDimension, new FloatMath());
             kdTree[cameraSerial] = tree;
         }
         var midPoint = MidPoint(output.Location!);
-        var neighbors = tree.RadialSearch(midPoint, radiusLimit).ToArray();
+        var neighbors = tree.RadialSearch(midPoint, radiusLimit);
 
         if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < timeout))
         {
