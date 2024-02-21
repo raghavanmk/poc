@@ -46,13 +46,18 @@ public class InferenceRulesTests
         //Arrange
         var testData = new List<(string, Output, long, bool)>
          {
-             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = new[] { 0.24f, 0.12f, 0.46f, 0.31f }, Score = 8.75f }, 1706679450030, false),
-             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = new[] { 0.24f, 0.12f, 0.46f, 0.31f }, Score = 8.75f }, 1706679550030, true),
-             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = new[] { 0.24f, 0.12f, 0.46f, 0.31f }, Score = 8.75f }, 1706679640030, false),
-             new ("Q2UV-9LPF-KURS", new Output { Class = 1, Id = 3, Location = new[] { 0.36f, 0.27f, 0.58f, 0.46f }, Score = 8.75f }, 1706679480030, false),
-             new ("Q2UV-5LPF-HURS", new Output { Class = 4, Id = 4, Location = new[] { 0.41f, 0.28f, 0.62f, 0.47f }, Score = 8.75f }, 1706679660030, false),
-             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 5, Location = new[] { 0.31f, 0.18f, 0.52f, 0.37f }, Score = 8.75f }, 1706679680030, true),
-             new ("Q2UV-9LPF-KURS", new Output { Class = 1, Id = 6, Location = new[] { 0.46f, 0.23f, 0.68f, 0.51f }, Score = 8.75f }, 1706679500030, true),
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 8.75f }, 1706679450030, false),
+             // same data as the above, with the time difference less than time constraint
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 8.75f }, 1706679550030, true),
+             // same data as the above, with the time difference greater that the time constaint
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 8.75f }, 1706679640030, false),
+             new ("Q2UV-5LPF-HURS", new Output { Class = 4, Id = 4, Location = [0.41f, 0.28f, 0.62f, 0.47f], Score = 8.75f }, 1706679660030, false),
+             // same camera, time difference less than time constraint, neighbor to the above data
+             new ("Q2UV-5LPF-HURS", new Output { Class = 1, Id = 5, Location = [0.31f, 0.18f, 0.52f, 0.37f], Score = 8.75f }, 1706679680030, true),
+             // new camera, new data
+             new ("Q2UV-9LPF-KURS", new Output { Class = 1, Id = 3, Location = [0.36f, 0.27f, 0.58f, 0.46f], Score = 8.75f }, 1706679480030, false),
+             // same camera as the above, neighbor to the above data, but time difference with the above data is greater than time constraint 
+             new ("Q2UV-9LPF-KURS", new Output { Class = 1, Id = 6, Location = [0.46f, 0.23f, 0.68f, 0.51f], Score = 8.75f }, 1706679670030, false),
          };
 
         foreach (var (cameraSerial, output, timestamp, isProcessed) in testData)
