@@ -2,45 +2,92 @@ using Microsoft.Extensions.Logging;
 using KdTree;
 using KdTree.Math;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Concurrent;
 
 namespace VideoAnalyticsPipeline;
 
-public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogger<InferenceRules> logger, IConfiguration configuration)
+internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> logger, IConfiguration configuration)
 {
-    // In kdTreeDict we store one kdtree for each camera(key)
-    // KdTree<float, Detection> here float is the point, detection can be any value that can be stored for that point
-    private readonly IDictionary<string, KdTree<float, Detection>> kdTreeDict = new Dictionary<string, KdTree<float, Detection>>();
-    public bool TryDetectViolation(Data data, out Output[] violations)
+    private const int kdTreeDimension = 2;
+    private const float coordinateLowerBound = 0;
+    private const float coordinateUpperBound = 1;
+
+    private readonly Dictionary<string, KdTree<float, Detection>> kdTree = [];
+    private readonly ConcurrentDictionary<string, long> processedCoordinates = [];    
+    private readonly float radiusLimit = configuration.GetValue<float>("InferenceCache:RadiusLimit");
+    private readonly int timeout = configuration.GetValue<int>("InferenceCache:Timeout");
+
+    internal bool TryDetectViolation(Data data, out Output[] violations)
     {
-        var modelInference = modelConfig[data.CameraSerial!];
-
-        violations = data.Inference?.Outputs?.Where(o =>
-                        CheckCoordinateBounds(o.Location)
-                        && !cache.TryCheckIfCoordinatesAreProcessed(o.Location, data.Inference.Timestamp, data.CameraSerial!,o.Class,o.Score)
-                        && modelInference!.Class!.Contains(o.Class)
-                        && o.Score > modelInference.Confidence
-                        && !CheckIfNeighborsAreSimilar(o, data.CameraSerial!, data.Inference.Timestamp)).ToArray()
-                        ?? [];
-
+        violations = data.Inference?.Outputs?.Where(o => IsValidOutput(o, data)).ToArray() ?? [];
         return violations.Length > 0;
     }
-    public bool CheckIfNeighborsAreSimilar(Output output, string cameraSerial, long timestamp)
+
+    private bool IsValidOutput(Output output, Data data) =>
+        
+        IfCoordinatesNotOutOfBounds(output.Location!) &&
+        IfCoordinatesNotProcessed(output.Location!, data.Inference!.Timestamp, data.CameraSerial!, output.Class, output.Score) &&
+        IfCoordinatesNotNeighbours(output, data.CameraSerial!, data.Inference.Timestamp) &&
+        IfInferenceOutsideThreshold(modelConfig[data.CameraSerial!], output);
+
+
+    internal bool IfCoordinatesNotOutOfBounds(float[] coordinates)
     {
-        // Check if a KD tree exists for the camera; if not, create and add it to the dictionary
-        if (!kdTreeDict.TryGetValue(cameraSerial, out var tree))
+        var bounds = coordinates.All(c => c >= coordinateLowerBound && c <= coordinateUpperBound);
+
+        if (!bounds)
+            logger.LogError("Coordinate bounds {coordinates} are not within 0 and 1. This will not be processed further", coordinates);
+
+        return bounds;
+    }
+
+    // To reduce load on pipeline we filter coordinates that are already processed within a time interval
+    // The following rules are applied to check if the coordinates are already processed
+    // A key is generated using the coordinates,camera serial, class id and confidence
+    // Confidence is converted to a range - low if it is less than the model confidence, high otherwise
+    // The key is then added to a dictionary with the timeStamp as the value
+    // When a new set of coordinates is received, the key is checked in the dictionary
+    // If the key is found and the timeStamp is within the interval, the coordinates are considered processed
+    // If the key is found and the timeStamp is outside the interval, the coordinates are considered not processed and timestamp is updated
+
+    internal bool IfCoordinatesNotProcessed(float[] coordinates, long timeStamp, string camSerial, int classId, float confidence)
+    {
+        var key = GenerateKey(coordinates, camSerial, classId, confidence);
+        if (processedCoordinates.TryGetValue(key, out var cachedTimestamp))
         {
-            tree = new KdTree<float, Detection>(2, new FloatMath());
-            kdTreeDict[cameraSerial] = tree;
+            if (timeStamp - cachedTimestamp > timeout)
+            {
+                processedCoordinates[key] = timeStamp;
+                return true;
+            }
+            logger.LogWarning("Coordinates {coordinates} for camera {camSerial} for class {classId} with confidence {confidence} already processed at {cachedTimestamp}",
+                coordinates, camSerial, classId, confidence, cachedTimestamp);
+            return false;
         }
+        else
+        {
+            if (processedCoordinates.TryAdd(key, timeStamp))
+                return true;
+            throw new InvalidOperationException("Failed to add coordinates to cache");
+        }
+    }
+    internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
+    {        
+        // should class id be considered ?
 
-        // Finding the centre of the bounding box
-        var centre = CoordsCentre(output.Location!);
+        if (!kdTree.TryGetValue(cameraSerial, out var tree))
+        {
+            tree = new KdTree<float, Detection>(kdTreeDimension, new FloatMath());
+            kdTree[cameraSerial] = tree;
+        }
+        var midPoint = MidPoint(output.Location!);
+        var neighbors = tree.RadialSearch(midPoint, radiusLimit);
 
-        // Radial search to find all detections within the specified radius from the center of the bounding box
-        var neighbors = tree.RadialSearch(centre, configuration.GetValue<float>("InferenceCache:RadiusLimit")).ToArray();
-
-        // Check if any neighbor's timestamp is within the time constraint; if yes, ignore the current output
-        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < configuration.GetValue<float>("InferenceCache:Timeout"))) return true;
+        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < timeout))
+        {
+            logger.LogWarning("Coordinates {coordinates} are neighbours to already processed", output.Location);
+            return false;
+        }
 
         // If no similar neighbors are found within the time constraint, add the current output to the tree
         var detection = new Detection
@@ -49,21 +96,24 @@ public class InferenceRules(ModelConfig modelConfig, InferenceCache cache, ILogg
             Timestamp = timestamp,
         };
 
-        tree.Add(centre, detection);
-        return false;
+        tree.Add(midPoint, detection);
+        return true;
     }
 
-    bool CheckCoordinateBounds(float[] coordinates)
+    internal static bool IfInferenceOutsideThreshold(ModelInference modelInference, Output output) =>
+
+        modelInference!.Class!.Contains(output.Class) &&
+               output.Score > modelInference.Confidence;
+
+
+    internal string GenerateKey(float[] coordinates, string camSerial, int classId, float confidence)
     {
-        var bounds = coordinates.All(c => c >= 0 && c <= 1);
-
-        if (!bounds)
-            logger.LogError("Coordinate bounds {coordinates} are not within 0 and 1. This will not be processed further", coordinates);
-
-        return bounds;
+        var confidenceRange = confidence < modelConfig.ModelConfidence(camSerial) ? "low" : "high";
+        var key = string.Join(',', coordinates) + "," + camSerial + "," + classId + "," + confidenceRange;
+        return key;
     }
 
-    float[] CoordsCentre(float[] coordinates)
+    internal static float[] MidPoint(float[] coordinates)
     {
         //Format : [ymin, xmin, ymax, xmax]
         var x = (float)Math.Round((coordinates[1] + coordinates[3]) / 2, 3);

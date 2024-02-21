@@ -37,7 +37,7 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
         }
     }
 
-    async ValueTask<SKBitmap?> DrawBoundingBox(Stream image, long timestamp, IEnumerable<float[]> location,
+    internal async ValueTask<SKBitmap?> DrawBoundingBox(Stream image, long timestamp, IEnumerable<float[]> location,
         CancellationToken cancellationToken) =>
 
         await Task.Run(() =>
