@@ -12,6 +12,7 @@ internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> l
     private const float coordinateLowerBound = 0;
     private const float coordinateUpperBound = 1;
 
+    // In this kdTree dictionary we store one kdtree for each camera(key)
     private readonly Dictionary<string, KdTree<float, Detection>> kdTree = [];
     private readonly ConcurrentDictionary<string, long> processedCoordinates = [];    
     private readonly float radiusLimit = configuration.GetValue<float>("InferenceCache:RadiusLimit");
@@ -72,18 +73,23 @@ internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> l
         }
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
-    {        
-        // should class id be considered ?
-
+    {
+        // Check if a Kd tree exists for the camera; if not, create and add it to the dictionary
         if (!kdTree.TryGetValue(cameraSerial, out var tree))
         {
             tree = new KdTree<float, Detection>(kdTreeDimension, new FloatMath());
             kdTree[cameraSerial] = tree;
         }
-        var midPoint = MidPoint(output.Location!);
-        var neighbors = tree.RadialSearch(midPoint, radiusLimit);
 
-        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < timeout))
+        // Find the center of the bounding box
+        var midPoint = MidPoint(output.Location!);
+
+        // Perform radial search to find all the detections within the specified radius from the center
+        // Filtering the obtained neighbors by class
+        var neighbors = tree.RadialSearch(midPoint, radiusLimit).Where(t => t.Value.Output!.Class == output.Class);
+
+        // Check if any neighbor's timestamp is within the time constraint; if yes, ignore the current output
+        if (neighbors.Count() > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < timeout))
         {
             logger.LogWarning("Coordinates {coordinates} are neighbours to already processed", output.Location);
             return false;
