@@ -32,7 +32,7 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
         }
     }
 
-    private async ValueTask<Image?> DownloadSnapshot(Data data, CancellationToken cancellationToken)
+    internal async ValueTask<Image?> DownloadSnapshot(Data data, CancellationToken cancellationToken)
     {
         var payload = new Dictionary<string, string>
         {

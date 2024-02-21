@@ -9,7 +9,7 @@ internal class MerakiAPIProxy(IHttpClientFactory httpClientFactory, IConfigurati
 {
     private readonly HttpClient httpClientWithRetry = httpClientFactory.CreateClient("HttpClientWithRetry");
 
-    public async ValueTask<string> GetImageUrl<T>(T payload, string camSerial, CancellationToken cancellationToken)
+    internal async ValueTask<string> GetImageUrl<T>(T payload, string camSerial, CancellationToken cancellationToken)
     {
         httpClientWithRetry.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             "Bearer", configuration["MerakiApi:BearerToken"]);
@@ -35,7 +35,7 @@ internal class MerakiAPIProxy(IHttpClientFactory httpClientFactory, IConfigurati
         throw new Exception(errorMessage);
     }
 
-    public async ValueTask<Stream> GetImage(string url, CancellationToken cancellationToken)
+    internal async ValueTask<Stream> GetImage(string url, CancellationToken cancellationToken)
     {
         var response = await httpClientWithRetry.GetAsync(url, cancellationToken);
 

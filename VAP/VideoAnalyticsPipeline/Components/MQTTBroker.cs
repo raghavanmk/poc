@@ -6,17 +6,17 @@ using MQTTnet.Client;
 
 namespace VideoAnalyticsPipeline;
 
-public class MQTTBroker(
+internal class MQTTBroker(
     ILogger<MQTTBroker> logger,
     IHostApplicationLifetime hostApplicationLifetime,
     IConfiguration configuration,
     ChannelFactory channelFactory) : IModule
 {
     private readonly IMqttClient _mqttClient = new MqttFactory().CreateMqttClient();
-    async Task InitAsync(CancellationToken cancellationToken)
+    private async Task InitAsync(CancellationToken cancellationToken)
     {
         var options = new MqttClientOptionsBuilder()
-            .WithTcpServer(configuration["MQTT:Host"])//, Convert.ToInt16(configuration["MQTT:Port"]))
+            .WithTcpServer(configuration["MQTT:Host"])
             .Build();
 
         _mqttClient.ConnectedAsync += (e) =>
@@ -59,7 +59,7 @@ public class MQTTBroker(
             logger.LogError(ex, "Error executing MQTT Broker");
         }
     }
-    async Task Process(MqttApplicationMessageReceivedEventArgs e, CancellationToken cancellationToken)
+    private async Task Process(MqttApplicationMessageReceivedEventArgs e, CancellationToken cancellationToken)
     {
         try
         {
@@ -72,7 +72,7 @@ public class MQTTBroker(
             foreach (var channel in channelFactory.Writers(nameof(MQTTBroker)))
             {
                 var camSerial = e.ApplicationMessage.Topic.Split('/')[2];
-                var inference = await ObjectFormatter.DeserializeAsync<Inference>(e.ApplicationMessage.PayloadSegment.Array, cancellationToken);                
+                var inference = await MessageFormatter.DeserializeAsync<Inference>(e.ApplicationMessage.PayloadSegment.Array, cancellationToken);                
                 await channel.WriteAsync(new Data { Inference = inference, CameraSerial = camSerial }, cancellationToken);
             }
         }

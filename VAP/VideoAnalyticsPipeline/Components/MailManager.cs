@@ -5,7 +5,7 @@ using System.Net.Mail;
 
 namespace VideoAnalyticsPipeline;
 
-public class MailManager
+internal class MailManager
 {
     private readonly SmtpClient smtpClient;
     private readonly string subject;
@@ -17,10 +17,10 @@ public class MailManager
     public MailManager(IConfiguration configuration, ILogger<MailManager> logger)
     {
         string fromPassword = configuration["SMTP:Password"]!;
-        string smtpHost = configuration["SMTP:HOST"]!;
+        string smtpHost = configuration["SMTP:Host"]!;
         int smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
 
-        fromAddress = new MailAddress(configuration["SMTP:ADDRESS"]!, configuration["SMTP:DISPLAYNAME"]!);
+        fromAddress = new MailAddress(configuration["SMTP:Address"]!, configuration["SMTP:DisplayName"]!);
 
         smtpClient = new SmtpClient
         {
@@ -39,7 +39,7 @@ public class MailManager
         this.logger = logger;
     }
 
-    public async ValueTask SendMail(Stream imageStream, string infmessage, string camSerial, long timestamp, CancellationToken cancellationToken)
+    internal async ValueTask SendMail(Stream imageStream, string infmessage, string camSerial, long timestamp, CancellationToken cancellationToken)
     {
         try
         {

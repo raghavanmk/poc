@@ -25,7 +25,7 @@ internal class SQLLogger(
         }
     }
 
-    private async ValueTask LogSql(Data data, CancellationToken cancellationToken)
+    internal async ValueTask LogSql(Data data, CancellationToken cancellationToken)
     {
         if (data.ViolationDetected || configuration["Log:All"] == "true")
         {

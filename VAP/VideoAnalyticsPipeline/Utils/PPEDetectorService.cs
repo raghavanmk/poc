@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 
 namespace VideoAnalyticsPipeline;
-public class PPEDetectorService(IEnumerable<IModule> modules,ILogger<PPEDetectorService> logger) : BackgroundService
+internal class PPEDetectorService(IEnumerable<IModule> modules,ILogger<PPEDetectorService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {

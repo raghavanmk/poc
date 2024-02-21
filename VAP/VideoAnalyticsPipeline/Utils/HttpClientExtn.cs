@@ -4,9 +4,9 @@ using Polly;
 using Serilog.Core;
 
 namespace VideoAnalyticsPipeline;
-public static class HttpClientExtn
+internal static class HttpClientExtn
 {
-    public static IServiceCollection AddHttpClientPolicy(this IServiceCollection services, Logger logger, IConfiguration configuration)
+    internal static IServiceCollection AddHttpClientPolicy(this IServiceCollection services, Logger logger, IConfiguration configuration)
     {        
         var retryCount = Convert.ToInt16(configuration["Polly:RetryCount"]);
         var retryInterval = Convert.ToInt16(configuration["Polly:RetryInterval"]);

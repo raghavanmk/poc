@@ -1,4 +1,3 @@
-using KdTree;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,9 +6,9 @@ using Serilog;
 using Serilog.Core;
 
 namespace VideoAnalyticsPipeline;
-public static class PipelineExtn
+internal static class PipelineExtn
 {
-    public static IServiceCollection AddPipelineComponents(this IServiceCollection services, Logger logger, IConfiguration configuration)
+    internal static IServiceCollection AddPipelineComponents(this IServiceCollection services, Logger logger, IConfiguration configuration)
     {
         try
         {
@@ -36,7 +35,6 @@ public static class PipelineExtn
 
             services.AddSingleton<ChannelFactory>();
             services.AddSingleton<InferenceRules>();
-            services.AddSingleton<InferenceCache>();
             services.AddSingleton<MerakiAPIProxy>();
             services.AddSingleton<MailManager>();
             services.AddHostedService<PPEDetectorService>();
@@ -53,7 +51,7 @@ public static class PipelineExtn
         return services;
     }
 
-    static ModelConfig? ParseModelConfigurations(IConfiguration configuration) =>
+    private static ModelConfig? ParseModelConfigurations(IConfiguration configuration) =>
     new()
     {
         Models = configuration.GetSection("Models").Get<Dictionary<string, ModelInference>>()

@@ -3,10 +3,11 @@ using System.Collections.Concurrent;
 using System.Threading.Channels;
 
 namespace VideoAnalyticsPipeline;
-public class ChannelFactory
+
+internal class ChannelFactory
 {
-    readonly ConcurrentDictionary<string, List<ChannelWriter<Data>>> writers = [];
-    readonly ConcurrentDictionary<string, ChannelReader<Data>> readers = [];
+    private readonly ConcurrentDictionary<string, List<ChannelWriter<Data>>> writers = [];
+    private readonly ConcurrentDictionary<string, ChannelReader<Data>> readers = [];
     public ChannelFactory(IConfiguration configuration)
     {
         var pipeline = configuration
@@ -26,7 +27,7 @@ public class ChannelFactory
             }
         }
     }
-    public List<ChannelWriter<Data>> Writers(string key)
+    internal List<ChannelWriter<Data>> Writers(string key)
     {
         if (writers.TryGetValue(key, out var writerList))
         {
@@ -36,7 +37,7 @@ public class ChannelFactory
         throw new KeyNotFoundException($"No writers found for key {key}");
     }
 
-    public ChannelReader<Data> Reader(string key)
+    internal ChannelReader<Data> Reader(string key)
     {
         if (readers.TryGetValue(key, out var reader))
         {
@@ -47,7 +48,7 @@ public class ChannelFactory
     }
 }
 
-public class ChannelManager
+internal class ChannelManager
 {
-    public static Channel<T> Create<T>() => Channel.CreateUnbounded<T>();
+    internal static Channel<T> Create<T>() => Channel.CreateUnbounded<T>();
 }
