@@ -8,6 +8,7 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
     public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
         var currentComponent = typeof(ImageRetriever).FullName!;
+
         await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             if (!data.ViolationDetected) continue;

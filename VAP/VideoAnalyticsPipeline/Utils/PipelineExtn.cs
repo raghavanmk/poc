@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 using Serilog.Core;
+using VideoAnalyticsPipeline.Components;
 
 namespace VideoAnalyticsPipeline;
 internal static class PipelineExtn
@@ -25,6 +26,7 @@ internal static class PipelineExtn
             }
 
             services.AddSingleton<ChannelFactory>();
+            services.AddSingleton<InferenceFilter>();
             services.AddSingleton<InferenceRules>();
             services.AddSingleton<MerakiAPIProxy>();
             services.AddSingleton<MailManager>();

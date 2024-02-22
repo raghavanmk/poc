@@ -70,6 +70,7 @@ internal class MQTTBroker(
 
             // invoke pipeline 
             var currentComponent = typeof(MQTTBroker).FullName!;
+
             foreach (var channel in channelFactory.Writers(currentComponent))
             {
                 var camSerial = e.ApplicationMessage.Topic.Split('/')[2];

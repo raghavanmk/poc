@@ -6,6 +6,7 @@ internal class Inferer(ChannelFactory channelFactory, ILogger<Inferer> logger, I
     public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
         var currentComponent = typeof(Inferer).FullName!;
+
         await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             try

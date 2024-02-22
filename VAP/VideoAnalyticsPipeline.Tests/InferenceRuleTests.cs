@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using VideoAnalyticsPipeline.Components;
 
 namespace VideoAnalyticsPipeline.Tests;
 public class InferenceRuleTests
 {
-    private readonly InferenceRules inferenceRules;
+    private readonly InferenceFilter inferenceFilter;
 
     public InferenceRuleTests()
     {
         // Arrange
-        var mockLogger = new Mock<ILogger<InferenceRules>>();
+        var mockLogger = new Mock<ILogger<InferenceFilter>>();
 
         var mockConfiguration = new Mock<IConfiguration>();
 
@@ -19,7 +20,7 @@ public class InferenceRuleTests
 
         mockConfiguration.Setup(a => a.GetSection("FilteringRules:RadiusLimit"))
                          .Returns(MockConfigurationSection("0.3").Object);
-        
+
         var modelConfig = new ModelConfig
         {
             Models = new Dictionary<string, ModelInference>
@@ -32,7 +33,7 @@ public class InferenceRuleTests
             }
         };
 
-        inferenceRules = new InferenceRules(modelConfig, mockLogger.Object, mockConfiguration.Object);
+        inferenceFilter = new InferenceFilter(modelConfig, mockConfiguration.Object, mockLogger.Object);
     }
 
     private static Mock<IConfigurationSection> MockConfigurationSection(string value)
@@ -49,7 +50,7 @@ public class InferenceRuleTests
         foreach (var (coordinates, timeStamp, camSerial, classId, confidence, expected) in TestDataGenerator.GenerateTestDataFor_IfCoordinatesNotProcessed())
         {
             // Act
-            var result = inferenceRules.IfCoordinatesNotProcessed(coordinates, timeStamp, camSerial, classId, confidence);
+            var result = inferenceFilter.IfCoordinatesNotProcessed(coordinates, timeStamp, camSerial, classId, confidence);
 
             // Assert
             Assert.Equal(expected, result);
@@ -59,11 +60,11 @@ public class InferenceRuleTests
 
     [Fact]
     public void IfCoordinatesNotNeighbours_TestAllConditions()
-    {        
+    {
         foreach (var (cameraSerial, output, timestamp, expected) in TestDataGenerator.GenerateTestDataFor_IfCoordinatesNotNeighbours())
         {
             //Act
-            var result = inferenceRules.IfCoordinatesNotNeighbours(output, cameraSerial, timestamp);
+            var result = inferenceFilter.IfCoordinatesNotNeighbours(output, cameraSerial, timestamp);
 
             //Assert
             Assert.Equal(expected, result);
