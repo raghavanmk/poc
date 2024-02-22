@@ -12,6 +12,7 @@ internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> l
     private const float coordinateLowerBound = 0;
     private const float coordinateUpperBound = 1;
 
+    // In this kdTree dictionary we store one kdtree for each class in a camera(key)
     private readonly Dictionary<string, KdTree<float, Detection>> kdTree = [];
     private readonly ConcurrentDictionary<string, long> processedCoordinates = [];    
     private readonly float radiusLimit = configuration.GetValue<float>("FilteringRules:RadiusLimit");
@@ -72,17 +73,23 @@ internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> l
         }
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
-    {        
-        // should class id be considered ?
+    {
+        var key = cameraSerial + output.Class;
 
-        if (!kdTree.TryGetValue(cameraSerial, out var tree))
+        // Check if a Kd tree exists for the class in that camera; if not, create and add it to the dictionary
+        if (!kdTree.TryGetValue(key, out var tree))
         {
             tree = new KdTree<float, Detection>(kdTreeDimension, new FloatMath());
-            kdTree[cameraSerial] = tree;
+            kdTree[cameraSerial + output.Class] = tree;
         }
+
+        // Find the center of the bounding box
         var midPoint = MidPoint(output.Location!);
+
+        // Perform radial search to find all the detections within the specified radius from the center
         var neighbors = tree.RadialSearch(midPoint, radiusLimit);
 
+        // Check if any neighbor's timestamp is within the time constraint; if yes, ignore the current output
         if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < timeout))
         {
             logger.LogWarning("Coordinates {coordinates} are neighbours to already processed", output.Location);
