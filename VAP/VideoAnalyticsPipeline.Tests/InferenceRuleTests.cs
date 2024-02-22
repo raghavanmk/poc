@@ -14,10 +14,10 @@ public class InferenceRuleTests
 
         var mockConfiguration = new Mock<IConfiguration>();
 
-        mockConfiguration.Setup(a => a.GetSection("InferenceCache:Timeout"))
+        mockConfiguration.Setup(a => a.GetSection("FilteringRules:Timeout"))
                          .Returns(MockConfigurationSection("1000").Object);
 
-        mockConfiguration.Setup(a => a.GetSection("InferenceCache:RadiusLimit"))
+        mockConfiguration.Setup(a => a.GetSection("FilteringRules:RadiusLimit"))
                          .Returns(MockConfigurationSection("0.3").Object);
         
         var modelConfig = new ModelConfig
