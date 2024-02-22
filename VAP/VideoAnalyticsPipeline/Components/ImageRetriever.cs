@@ -5,9 +5,10 @@ namespace VideoAnalyticsPipeline;
 
 internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetriever> logger, MerakiAPIProxy proxy) : IModule
 {
-    public async Task ExecuteAsync(CancellationToken cancellationToken)
+    public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
-        await foreach (var data in channelFactory.Reader(nameof(ImageRetriever)).ReadAllAsync(cancellationToken))
+        var currentComponent = typeof(ImageRetriever).FullName!;
+        await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             if (!data.ViolationDetected) continue;
             
@@ -19,7 +20,7 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
 
                 if (image != null)
                 {
-                    foreach (var channel in channelFactory.Writers(nameof(ImageRetriever)))
+                    foreach (var channel in channelFactory.Writers(currentComponent))
                     {
                         await channel.WriteAsync(image, cancellationToken);
                     }

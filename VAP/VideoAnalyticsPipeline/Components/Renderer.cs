@@ -4,9 +4,11 @@ using SkiaSharp;
 namespace VideoAnalyticsPipeline;
 internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger) : IModule
 {
-    public async Task ExecuteAsync(CancellationToken cancellationToken)
+    public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
-        await foreach (var data in channelFactory.Reader(nameof(Renderer)).ReadAllAsync(cancellationToken))
+        var currentComponent = typeof(Renderer).FullName!;
+
+        await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             var image = (Image)data;
 
@@ -23,7 +25,7 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
                         image.ImageStream = new MemoryStream();
                         boundedBoxImg.Encode(image.ImageStream, SKEncodedImageFormat.Jpeg, 100);
 
-                        foreach (var writer in channelFactory.Writers(nameof(Renderer)))
+                        foreach (var writer in channelFactory.Writers(currentComponent))
                         {
                             await writer.WriteAsync(image, cancellationToken);
                         }

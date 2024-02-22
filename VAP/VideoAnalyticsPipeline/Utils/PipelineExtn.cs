@@ -13,24 +13,15 @@ internal static class PipelineExtn
         try
         {
             var modelConfig = ParseModelConfigurations(configuration) ?? throw new Exception("Unable to parse model configurations");
+            var pipelineComponentsConfig = ParsePipelineConfig(configuration) ?? throw new Exception("Unable to parse pipeline configurations");
 
             services.AddSingleton(modelConfig);
-
+            services.AddSingleton(pipelineComponentsConfig);
             services.AddSingleton(provider => new SqlConnection(configuration["ConnectionString:SQLServer"]));
 
-            var moduleTypes = new Type[]
+            foreach (var component in pipelineComponentsConfig.Components)
             {
-                   typeof(MQTTBroker),
-                   typeof(Inferer),
-                   typeof(ImageRetriever),
-                   typeof(Renderer),
-                   typeof(EmailNotifier),
-                   typeof(SQLLogger)
-            };
-
-            foreach (var moduleType in moduleTypes)
-            {
-                services.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IModule), moduleType));
+                services.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IModule), Type.GetType(component)!));
             }
 
             services.AddSingleton<ChannelFactory>();
@@ -57,4 +48,9 @@ internal static class PipelineExtn
         Models = configuration.GetSection("Models").Get<Dictionary<string, ModelInference>>()
     };
 
+    private static PipelineComponentsConfig? ParsePipelineConfig(IConfiguration configuration) =>
+    new()
+    {
+        PipelineComponents = configuration.GetSection("Pipeline").Get<Dictionary<string, string[]>>()
+    };
 }

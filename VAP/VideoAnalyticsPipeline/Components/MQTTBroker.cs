@@ -37,7 +37,7 @@ internal class MQTTBroker(
         await _mqttClient.ConnectAsync(options, cancellationToken);
     }
 
-    public async Task ExecuteAsync(CancellationToken cancellationToken)
+    public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -69,7 +69,8 @@ internal class MQTTBroker(
                    e.ApplicationMessage.Topic, e.ApplicationMessage.ConvertPayloadToString());
 
             // invoke pipeline 
-            foreach (var channel in channelFactory.Writers(nameof(MQTTBroker)))
+            var currentComponent = typeof(MQTTBroker).FullName!;
+            foreach (var channel in channelFactory.Writers(currentComponent))
             {
                 var camSerial = e.ApplicationMessage.Topic.Split('/')[2];
                 var inference = await MessageFormatter.DeserializeAsync<Inference>(e.ApplicationMessage.PayloadSegment.Array, cancellationToken);                

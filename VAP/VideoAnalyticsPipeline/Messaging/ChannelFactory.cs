@@ -8,14 +8,9 @@ internal class ChannelFactory
 {
     private readonly ConcurrentDictionary<string, List<ChannelWriter<Data>>> writers = [];
     private readonly ConcurrentDictionary<string, ChannelReader<Data>> readers = [];
-    public ChannelFactory(IConfiguration configuration)
+    public ChannelFactory(PipelineComponentsConfig pipelineComponentsConfig)
     {
-        var pipeline = configuration
-                        .GetSection("Pipeline")
-                        .Get<Dictionary<string, string[]>>()
-                        ?? throw new KeyNotFoundException("No pipeline found in configuration");
-
-        foreach (var kvp in pipeline)
+        foreach (var kvp in pipelineComponentsConfig.PipelineComponents!)
         {
             writers.TryAdd(kvp.Key, []);
 

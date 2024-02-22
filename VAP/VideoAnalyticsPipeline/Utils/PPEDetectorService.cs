@@ -8,7 +8,7 @@ internal class PPEDetectorService(IEnumerable<IModule> modules,ILogger<PPEDetect
     {
         try
         {
-            var tasks = modules.Select(module => module.ExecuteAsync(cancellationToken));
+            var tasks = modules.Select(module => module.ExecuteAsync(cancellationToken).AsTask());
             await Task.WhenAll(tasks);
         }
         catch (AggregateException ae)

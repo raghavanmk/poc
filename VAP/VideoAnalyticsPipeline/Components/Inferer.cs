@@ -3,9 +3,10 @@
 namespace VideoAnalyticsPipeline;
 internal class Inferer(ChannelFactory channelFactory, ILogger<Inferer> logger, InferenceRules infererRules) : IModule
 {
-    public async Task ExecuteAsync(CancellationToken cancellationToken)
+    public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
-        await foreach (var data in channelFactory.Reader(nameof(Inferer)).ReadAllAsync(cancellationToken))
+        var currentComponent = typeof(Inferer).FullName!;
+        await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             try
             {
@@ -15,7 +16,7 @@ internal class Inferer(ChannelFactory channelFactory, ILogger<Inferer> logger, I
                 data.ViolationDetected = true;
                 data.Inference!.Outputs = violations;
 
-                foreach (var writer in channelFactory.Writers(nameof(Inferer)))
+                foreach (var writer in channelFactory.Writers(currentComponent))
                 {
                     await writer.WriteAsync(data, cancellationToken);
                 }

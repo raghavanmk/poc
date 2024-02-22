@@ -9,9 +9,11 @@ internal class SQLLogger(
     ILogger<SQLLogger> logger,
     SqlConnection sqlConnection) : IModule
 {
-    public async Task ExecuteAsync(CancellationToken cancellationToken)
+    public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
-        await foreach (var data in channelFactory.Reader(nameof(SQLLogger)).ReadAllAsync(cancellationToken))
+        var currentComponent = typeof(SQLLogger).FullName!;
+
+        await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             try
             {

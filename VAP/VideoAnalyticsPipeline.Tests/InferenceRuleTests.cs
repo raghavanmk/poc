@@ -13,8 +13,10 @@ public class InferenceRuleTests
         var mockLogger = new Mock<ILogger<InferenceRules>>();
 
         var mockConfiguration = new Mock<IConfiguration>();
+
         mockConfiguration.Setup(a => a.GetSection("InferenceCache:Timeout"))
                          .Returns(MockConfigurationSection("1000").Object);
+
         mockConfiguration.Setup(a => a.GetSection("InferenceCache:RadiusLimit"))
                          .Returns(MockConfigurationSection("0.3").Object);
         

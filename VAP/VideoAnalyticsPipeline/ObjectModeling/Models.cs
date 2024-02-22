@@ -12,7 +12,7 @@ public class Inference
 {
     public Output[]? Outputs { get; set; }
     public long Timestamp { get; set; }
-    public override string ToString() => JsonSerializer.Serialize(this);
+    public override string ToString() => MessageFormatter.Serialize(this);
 }
 
 public class Output
@@ -20,7 +20,7 @@ public class Output
     public int Class { get; set; }
     public int Id { get; set; }
     // location values contain normalized coordinates of the bounding box. it follows [ymin, xmin, ymax, xmax] format
-    public float[]? Location {  get; set; }    
+    public float[]? Location { get; set; }
     public float Score { get; set; }
 }
 
@@ -52,6 +52,31 @@ public class ModelConfig
     }
 }
 
+public class PipelineComponentsConfig
+{
+    public Dictionary<string, string[]>? PipelineComponents { get; set; }
+
+    public HashSet<string> Components
+    {
+        get
+        {
+            var pipelineTypes = new HashSet<string>();
+
+            foreach (var pair in PipelineComponents!)
+            {
+                if (!pipelineTypes.Contains(pair.Key))
+                {
+                    pipelineTypes.Add(pair.Key);
+                }
+                foreach (var value in pair.Value)
+                {
+                    pipelineTypes.Add(value);
+                }
+            }
+            return pipelineTypes;
+        }
+    }
+}
 public class ModelInference
 {
     public int[]? Class { get; set; }

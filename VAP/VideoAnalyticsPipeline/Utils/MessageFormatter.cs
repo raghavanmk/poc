@@ -6,14 +6,11 @@ internal class MessageFormatter
 {
     static readonly JsonSerializerOptions serializerOptions =
         new() { PropertyNameCaseInsensitive = true, Converters = { new RoundFloatArrayConverter() } };
+
     internal static async ValueTask<T?> DeserializeAsync<T>(byte[] message, CancellationToken cancellationToken) =>
          await JsonSerializer.DeserializeAsync<T>(new MemoryStream(message), serializerOptions, cancellationToken);
 
-    internal static T? Deserialize<T>(string message) =>
-          JsonSerializer.Deserialize<T>(message, serializerOptions);
-
-    internal static string Serialize<T>(T t) =>
-        JsonSerializer.Serialize(t);
+    internal static string Serialize<T>(T t) => JsonSerializer.Serialize(t);
 }
 
 internal class RoundFloatArrayConverter : JsonConverter<float[]>
@@ -38,8 +35,8 @@ internal class RoundFloatArrayConverter : JsonConverter<float[]>
         throw new JsonException();
     }
 
-    public override void Write(Utf8JsonWriter writer, float[] values, JsonSerializerOptions options)
-    => JsonSerializer.Serialize(writer, values, options);
+    public override void Write(Utf8JsonWriter writer, float[] values, JsonSerializerOptions options) => 
+        JsonSerializer.Serialize(writer, values, options);
 
 }
 
