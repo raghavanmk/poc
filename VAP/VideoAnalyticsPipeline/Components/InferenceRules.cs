@@ -14,8 +14,8 @@ internal class InferenceRules(ModelConfig modelConfig, ILogger<InferenceRules> l
 
     private readonly Dictionary<string, KdTree<float, Detection>> kdTree = [];
     private readonly ConcurrentDictionary<string, long> processedCoordinates = [];    
-    private readonly float radiusLimit = configuration.GetValue<float>("InferenceCache:RadiusLimit");
-    private readonly int timeout = configuration.GetValue<int>("InferenceCache:Timeout");
+    private readonly float radiusLimit = configuration.GetValue<float>("FilteringRules:RadiusLimit");
+    private readonly int timeout = configuration.GetValue<int>("FilteringRules:Timeout");
 
     internal bool TryDetectViolation(Data data, out Output[] violations)
     {
