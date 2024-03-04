@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Threading.Channels;
 
 namespace VideoAnalyticsPipeline;

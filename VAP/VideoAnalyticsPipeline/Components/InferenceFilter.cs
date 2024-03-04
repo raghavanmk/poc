@@ -12,7 +12,7 @@ internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configurat
     private const float coordinateUpperBound = 1;
 
     // In this kdTree dictionary we store one kdtree for each class in a camera(key)
-    private readonly Dictionary<string, KdTree<float, Detection>> kdTree = [];
+    private readonly ConcurrentDictionary<string, KdTree<float, Detection>> kdTree = [];
     private readonly ConcurrentDictionary<string, long> processedCoordinates = [];
     private readonly float radiusLimit = configuration.GetValue<float>("FilteringRules:RadiusLimit");
     private readonly int timeout = configuration.GetValue<int>("FilteringRules:Timeout");

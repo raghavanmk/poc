@@ -6,6 +6,7 @@ internal class EmailNotifier(ChannelFactory channelFactory, MailManager mailMana
     public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
         var currentComponent = typeof(EmailNotifier).FullName!;
+
         await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             try

@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace VideoAnalyticsPipeline;
+﻿namespace VideoAnalyticsPipeline;
 
 public class Data
 {
