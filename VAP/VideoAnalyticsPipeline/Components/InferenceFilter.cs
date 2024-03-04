@@ -38,6 +38,8 @@ internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configurat
 
     internal bool IfCoordinatesNotProcessed(float[] coordinates, long timeStamp, string camSerial, int classId, float confidence)
     {
+        var modelInference = modelConfig[camSerial!];
+
         var key = GenerateKey(coordinates, camSerial, classId, confidence);
         if (processedCoordinates.TryGetValue(key, out var cachedTimestamp))
         {
@@ -53,12 +55,17 @@ internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configurat
         else
         {
             if (processedCoordinates.TryAdd(key, timeStamp))
-                return true;
+                if (modelInference.Deferred) return false;
+                else return true;
             throw new InvalidOperationException("Failed to add coordinates to cache");
         }
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
     {
+        //   var modelInference = modelConfig[camSerial!];
+        //   radiusLimit = modelInference.RadiusLimit;
+        //   timeout = modelInference.Timeout;
+
         var key = cameraSerial + output.Class;
 
         // Check if a Kd tree exists for the class in that camera; if not, create and add it to the dictionary

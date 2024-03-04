@@ -81,6 +81,9 @@ public class ModelInference
 {
     public int[]? Class { get; set; }
     public float Confidence { get; set; }
+    public int Timeout { get; set; }
+    public bool Deferred { get; set; }
+    public float RadiusLimit { get; set; }
 }
 
 public class Detection
