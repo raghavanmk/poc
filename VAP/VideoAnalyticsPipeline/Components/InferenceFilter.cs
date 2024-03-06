@@ -3,9 +3,10 @@ using KdTree;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace VideoAnalyticsPipeline.Components;
-internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configuration, ILogger<InferenceFilter> logger)
+internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter> logger)
 {
     private const int kdTreeDimension = 2;
     private const float coordinateLowerBound = 0;
@@ -14,8 +15,6 @@ internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configurat
     // In this kdTree dictionary we store one kdtree for each class in a camera(key)
     private readonly ConcurrentDictionary<string, KdTree<float, Detection>> kdTree = [];
     private readonly ConcurrentDictionary<string, long> processedCoordinates = [];
-    private readonly float radiusLimit = configuration.GetValue<float>("FilteringRules:RadiusLimit");
-    private readonly int timeout = configuration.GetValue<int>("FilteringRules:Timeout");
 
     internal bool IfCoordinatesNotOutOfBounds(float[] coordinates)
     {
@@ -38,10 +37,12 @@ internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configurat
 
     internal bool IfCoordinatesNotProcessed(float[] coordinates, long timeStamp, string camSerial, int classId, float confidence)
     {
+        var modelInference = modelConfig[camSerial];
+
         var key = GenerateKey(coordinates, camSerial, classId, confidence);
         if (processedCoordinates.TryGetValue(key, out var cachedTimestamp))
         {
-            if (timeStamp - cachedTimestamp > timeout)
+            if (timeStamp - cachedTimestamp > modelInference.Timeout)
             {
                 processedCoordinates[key] = timeStamp;
                 return true;
@@ -53,12 +54,15 @@ internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configurat
         else
         {
             if (processedCoordinates.TryAdd(key, timeStamp))
-                return true;
+                if (!modelInference.Deferred) return true; // For some cameras, the first alert should be saved but after certain time only, it should be processed
+                else return false;
             throw new InvalidOperationException("Failed to add coordinates to cache");
         }
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
     {
+        var modelInference = modelConfig[cameraSerial];
+
         var key = cameraSerial + output.Class;
 
         // Check if a Kd tree exists for the class in that camera; if not, create and add it to the dictionary
@@ -72,10 +76,10 @@ internal class InferenceFilter(ModelConfig modelConfig,IConfiguration configurat
         var midPoint = MidPoint(output.Location!);
 
         // Perform radial search to find all the detections within the specified radius from the center
-        var neighbors = tree.RadialSearch(midPoint, radiusLimit);
+        var neighbors = tree.RadialSearch(midPoint, modelInference.RadiusLimit);
 
         // Check if any neighbor's timestamp is within the time constraint; if yes, ignore the current output
-        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < timeout))
+        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < modelInference.Timeout))
         {
             logger.LogWarning("Coordinates {coordinates} are neighbours to already processed", output.Location);
             return false;
