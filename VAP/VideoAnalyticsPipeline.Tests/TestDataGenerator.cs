@@ -30,6 +30,34 @@ public class TestDataGenerator
         yield return new([0.1f, 0.2f, 0.3f, 0.4f], baseTime + 1020, "Q2UV-N5GT-HURS", 2, 0.9f, true);
     }
 
+    public static IEnumerable<(float[], long, string, int, float, bool)> GenerateTestDataFor_IfCoordinatesNotProcessedDeferred()
+    {
+        // 1706679450000 1/31/2024 5:37:30 AM +00:00
+
+        // Arrange
+
+        // first set of coordinates 
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], Timestamp(0), "Q2UV-N5GT-HURS", 2, 0.9f, false);
+
+        // same coordinates, confidence, class but different camera and within same time interval
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], Timestamp(5), "Q2UV-5LPF-HURS", 2, 0.9f, false);
+
+        // same coordinates, camera, confidence, class but and same time interval
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], Timestamp(10), "Q2UV-N5GT-HURS", 2, 0.9f, false);
+
+        // same coordinates, camera, confidence,but different class id and within same time interval
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], Timestamp(20), "Q2UV-N5GT-HURS", 1, 0.9f, false);
+
+        // same coordinates, camera, class, different confidence within same range and within same time interval
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], Timestamp(30), "Q2UV-N5GT-HURS", 2, 0.8f, false);
+
+        // same coordinates, camera, class, confidence but different range and within same time interval
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], Timestamp(40), "Q2UV-N5GT-HURS", 2, 0.6f, false);
+
+        // same coordinates, camera, confidence, class but different timestamp > 1000ms 
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], Timestamp(1020), "Q2UV-N5GT-HURS", 2, 0.9f, true);
+    }
+
     public static IEnumerable<(string, Output, long, bool)> GenerateTestDataFor_IfCoordinatesNotNeighbours()
     {
         // initialize the data

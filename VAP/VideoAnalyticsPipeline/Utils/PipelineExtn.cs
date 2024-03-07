@@ -30,6 +30,7 @@ internal static class PipelineExtn
             services.AddSingleton<InferenceRules>();
             services.AddSingleton<MerakiAPIProxy>();
             services.AddSingleton<MailManager>();
+            services.AddSingleton<BlobStorage>();
             services.AddHostedService<PPEDetectorService>();
 
         }
