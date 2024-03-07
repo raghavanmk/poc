@@ -52,15 +52,15 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         else
         {
             if (processedCoordinates.TryAdd(key, timeStamp))
-                if (modelInference.Deferred) return false;
-                else return true;
+                return !modelInference.Deferred;
+
             throw new InvalidOperationException("Failed to add coordinates to cache");
         }
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
     {
         var modelInference = modelConfig[cameraSerial];
-     
+
         var key = cameraSerial + output.Class;
 
         // Check if a Kd tree exists for the class in that camera; if not, create and add it to the dictionary
