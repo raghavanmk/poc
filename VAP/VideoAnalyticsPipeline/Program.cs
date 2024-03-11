@@ -19,7 +19,7 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
    Host.CreateDefaultBuilder(args)
         .ConfigureAppConfiguration((hostContext, config) =>
         {
-            config.AddJsonFile("appsettings.serilog.json", optional: false, reloadOnChange: true);         
+            config.AddJsonFile("appsettings.Serilog.json", optional: false, reloadOnChange: true);         
         })
        .ConfigureServices((hostContext, services) =>
        {

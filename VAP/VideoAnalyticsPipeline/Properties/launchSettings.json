@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "VideoAnalyticsPipeline": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
