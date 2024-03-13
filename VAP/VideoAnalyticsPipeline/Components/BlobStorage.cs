@@ -33,6 +33,8 @@ namespace VideoAnalyticsPipeline.Components
         {
             var blobClient = blobServiceClient.GetBlobContainerClient(containerName).GetBlobClient($"{image.CameraSerial}_{image.Inference!.Timestamp}_{Guid.NewGuid()}.jpg");
 
+            image.ImageStream!.Position = 0;
+
             await blobClient.UploadAsync(image.ImageStream, true, cancellationToken);
 
             logger.LogInformation("Image uploaded to Azure Blob Storage.");
