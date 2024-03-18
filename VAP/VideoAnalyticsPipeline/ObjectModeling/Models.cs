@@ -34,11 +34,11 @@ public class ModelConfig
     public Dictionary<string, ModelInference> ClassDefaults { get; set; }
     public Dictionary<string, int[]> Cameras { get; set; }
 
-    public ModelInference this[string cameraSerial, int classs]
+    public ModelInference this[int classId]
     {
         get
         {
-            ClassDefaults.TryGetValue(classs.ToString(), out var modelInference);
+            ClassDefaults.TryGetValue(classId.ToString(), out var modelInference);
             return modelInference!;
         }
     }

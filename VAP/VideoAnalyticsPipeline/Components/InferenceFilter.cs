@@ -35,7 +35,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
 
     internal bool IfCoordinatesNotProcessed(float[] coordinates, long timeStamp, string camSerial, int classId, float confidence)
     {
-        var modelInference = modelConfig[camSerial!, classId];
+        var modelInference = modelConfig[classId];
 
         var key = GenerateKey(coordinates, camSerial, classId, confidence);
         if (processedCoordinates.TryGetValue(key, out var cachedTimestamp))
@@ -59,7 +59,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
     {
-        var modelInference = modelConfig[cameraSerial, output.Class];
+        var modelInference = modelConfig[output.Class];
 
         var key = cameraSerial + output.Class;
 
