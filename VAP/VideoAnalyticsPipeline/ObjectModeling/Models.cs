@@ -1,4 +1,5 @@
-﻿namespace VideoAnalyticsPipeline;
+﻿
+namespace VideoAnalyticsPipeline;
 
 public class Data
 {
@@ -25,6 +26,7 @@ public class Output
 public class Image : Data
 {
     public Stream? ImageStream { get; set; }
+
 }
 
 public class ModelConfig

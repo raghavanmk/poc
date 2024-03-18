@@ -1,12 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
 
 namespace VideoAnalyticsPipeline.Components
 {
-    internal class BlobStorage(ChannelFactory channelFactory, ILogger<BlobStorage> logger) : IModule
+    internal class BlobStorage(ChannelFactory channelFactory, ILogger<BlobStorage> logger, IConfiguration configuration) : IModule
     {
-        private readonly BlobServiceClient blobServiceClient = new BlobServiceClient("blobConnectionString");
-        private readonly string containerName = "Container";
+        private readonly BlobServiceClient blobServiceClient = new BlobServiceClient(configuration["Blob:ConnectionString"]);
+        private readonly string containerName = configuration["Blob:Container"]!;
         public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
         {
             var currentComponent = typeof(BlobStorage).FullName!;
