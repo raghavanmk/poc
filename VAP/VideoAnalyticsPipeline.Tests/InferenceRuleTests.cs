@@ -7,7 +7,7 @@ namespace VideoAnalyticsPipeline.Tests;
 public class InferenceRuleTests
 {
     private readonly InferenceFilter inferenceFilter;
-    private ModelConfig modelConfig;
+    private readonly ModelConfig modelConfig;
     public InferenceRuleTests()
     {
         // Arrange
@@ -15,16 +15,16 @@ public class InferenceRuleTests
 
         modelConfig = new ModelConfig
         {
-            LabelMap = new Dictionary<string, string> 
+            LabelMap = new Dictionary<int, string> 
             {
-                ["0"] = "jacket",
-                ["1"] = "no-jacket",
-                ["2"] = "helmet",
-                ["3"] = "no-helmet",
-                ["4"] = "drum-on-pallet",
-                ["5"] = "drum-on-drum",
-                ["6"] = "drum-on-floor",
-                ["7"] = "drum-on-floor"
+                [0] = "jacket",
+                [1] = "no-jacket",
+                [2] = "helmet",
+                [3] = "no-helmet",
+                [4] = "drum-on-pallet",
+                [5] = "drum-on-drum",
+                [6] = "drum-on-floor",
+                [7] = "drum-on-floor"
             },
             Camera = new Dictionary<string, int[]> 
             {
@@ -33,7 +33,7 @@ public class InferenceRuleTests
                 ["Q2UV-9LPF-KURS"] = [ 1 ],
                 ["Q2UV-5LPF-A973"] = [ 1, 2, 6 ],
             },
-            Label = new Dictionary<string, ModelInference>
+            ModelInference = new Dictionary<string, ModelInference>
             {
                 ["Shared"] = new ModelInference
                 {

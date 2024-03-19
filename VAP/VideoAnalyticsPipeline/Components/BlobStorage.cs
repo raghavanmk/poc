@@ -8,7 +8,7 @@ namespace VideoAnalyticsPipeline.Components
     [Experimental(diagnosticId: "blob")]
     internal class BlobStorage(ChannelFactory channelFactory, ILogger<BlobStorage> logger, IConfiguration configuration) : IModule
     {
-        private readonly BlobServiceClient blobServiceClient = new BlobServiceClient(configuration["Blob:ConnectionString"]);
+        private readonly BlobServiceClient blobServiceClient = new(configuration["Blob:ConnectionString"]);
         private readonly string containerName = configuration["Blob:Container"]!;
         public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
         {

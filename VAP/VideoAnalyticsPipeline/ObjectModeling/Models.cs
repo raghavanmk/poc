@@ -31,25 +31,19 @@ public class Image : Data
 
 public class ModelConfig
 {
-    public Dictionary<string, ModelInference>? Label { get; set; }
+    public Dictionary<string, ModelInference>? ModelInference { get; set; }
     public Dictionary<string, int[]>? Camera { get; set; }
-    public Dictionary<string, string>? LabelMap { get; set; }
+    public Dictionary<int, string>? LabelMap { get; set; }
 
     public ModelInference this[int classId]
     {
         get
         {
-            if(Label!.TryGetValue(GetLabel(classId), out var modelInference))
+            if(ModelInference!.TryGetValue(LabelMap![classId], out var modelInference))
                 return modelInference!;
             
-            return Label["Shared"]!;
+            return ModelInference["Shared"]!;
         }
-    }
-
-    private string GetLabel(int classId)
-    {
-        LabelMap!.TryGetValue(classId.ToString(), out var label);
-        return label!;
     }
 
     public int[] this[string cameraSerial]
@@ -62,10 +56,10 @@ public class ModelConfig
     }
     public float ModelConfidence(int classId)
     {
-        if (Label!.TryGetValue(GetLabel(classId), out var modelInference))
+        if (ModelInference!.TryGetValue(LabelMap![classId], out var modelInference))
             return modelInference.Confidence;
 
-        return Label["Shared"].Confidence;
+        return ModelInference["Shared"].Confidence;
     }
 }
 
