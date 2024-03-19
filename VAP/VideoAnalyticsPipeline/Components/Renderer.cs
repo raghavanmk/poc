@@ -60,10 +60,10 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
 
                     // Convert the normalized coordinates to absolute pixel coordinates
                     // location values contain normalized coordinates of the bounding box. it follows [ymin, xmin, ymax, xmax] format
-                    var absXmin = (int)(l[1] * originalImage.Width);
-                    var absXmax = (int)(l[3] * originalImage.Width);
-                    var absYmin = (int)(l[0] * originalImage.Height);
-                    var absYmax = (int)(l[2] * originalImage.Height);
+                    var absXmin = (int)(l[0] * originalImage.Width);
+                    var absXmax = (int)(l[2] * originalImage.Width);
+                    var absYmin = (int)(l[1] * originalImage.Height);
+                    var absYmax = (int)(l[3] * originalImage.Height);
 
                     using var paint = new SKPaint();
                     paint.Style = SKPaintStyle.Stroke;

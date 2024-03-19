@@ -51,7 +51,7 @@ internal class SQLLogger(
                        $"""
                             INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
                             BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, DetectionImageUrl, ModifiedBy, ModifiedDate)
-                            VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![1]},{o.Location[3]},{o.Location[0]},{o.Location[2]},{unixEpoch},'{dateTime}',
+                            VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
                             null,'cedevops',GETDATE())
                         """;
 
