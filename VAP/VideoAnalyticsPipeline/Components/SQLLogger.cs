@@ -45,7 +45,7 @@ internal class SQLLogger(
                         var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
 
                         // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
-                        // location array sequence is [ymin, xmin, ymax, xmax]                        
+                        // location array sequence is [xmin, ymin, xmax, ymax]                        
 
                         string insertQuery =
                        $"""

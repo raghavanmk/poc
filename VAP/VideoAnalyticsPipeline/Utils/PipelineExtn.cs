@@ -48,8 +48,8 @@ internal static class PipelineExtn
     private static ModelConfig? ParseModelConfigurations(IConfiguration configuration) =>
     new()
     {
-        ClassDefaults = configuration.GetSection("ClassDefaults").Get<Dictionary<string, ModelInference>>(),
-        Cameras = configuration.GetSection("Cameras").Get<Dictionary<string, int[]>>()
+        ClassInference = configuration.GetSection("ClassInference").Get<Dictionary<string, ModelInference>>(),
+        Camera = configuration.GetSection("Camera").Get<Dictionary<string, int[]>>()
     };
 
     private static PipelineComponentsConfig? ParsePipelineConfig(IConfiguration configuration) =>

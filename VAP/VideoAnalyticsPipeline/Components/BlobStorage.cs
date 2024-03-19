@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace VideoAnalyticsPipeline.Components
 {
+    [Experimental(diagnosticId: "blob")]
     internal class BlobStorage(ChannelFactory channelFactory, ILogger<BlobStorage> logger, IConfiguration configuration) : IModule
     {
         private readonly BlobServiceClient blobServiceClient = new BlobServiceClient(configuration["Blob:ConnectionString"]);

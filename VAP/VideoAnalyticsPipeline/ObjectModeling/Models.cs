@@ -31,15 +31,17 @@ public class Image : Data
 
 public class ModelConfig
 {
-    public Dictionary<string, ModelInference>? ClassDefaults { get; set; }
-    public Dictionary<string, int[]>? Cameras { get; set; }
+    public Dictionary<string, ModelInference>? ClassInference { get; set; }
+    public Dictionary<string, int[]>? Camera { get; set; }
 
     public ModelInference this[int classId]
     {
         get
         {
-            ClassDefaults!.TryGetValue(classId.ToString(), out var modelInference);
-            return modelInference!;
+            if(ClassInference!.TryGetValue(classId.ToString(), out var modelInference))
+                return modelInference!;
+
+            return ClassInference["Shared"]!;
         }
     }
 
@@ -47,16 +49,16 @@ public class ModelConfig
     {
         get
         {
-            Cameras!.TryGetValue(cameraSerial, out var classArr);
+            Camera!.TryGetValue(cameraSerial, out var classArr);
             return classArr!;
         }
     }
     public float ModelConfidence(int classId)
     {
-        if (ClassDefaults!.TryGetValue(classId.ToString(), out var modelInference))
+        if (ClassInference!.TryGetValue(classId.ToString(), out var modelInference))
             return modelInference.Confidence;
 
-        return 0;
+        return ClassInference["Shared"].Confidence;
     }
 }
 
@@ -87,7 +89,7 @@ public class PipelineComponentsConfig
 }
 public class ModelInference
 {
-    public int Class { get; set; }
+    public int? Class { get; set; }
     public float Confidence { get; set; }
     public int Timeout { get; set; }
     public bool Deferred { get; set; }

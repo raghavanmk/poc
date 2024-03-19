@@ -27,7 +27,7 @@ public class TestDataGenerator
         yield return new([0.1f, 0.2f, 0.3f, 0.4f], baseTime + 40, "Q2UV-N5GT-HURS", 2, 0.6f, true);
 
         // same coordinates, camera, confidence, class but different timestamp > 1000ms 
-        yield return new([0.1f, 0.2f, 0.3f, 0.4f], baseTime + 1020, "Q2UV-N5GT-HURS", 2, 0.9f, true);
+        yield return new([0.1f, 0.2f, 0.3f, 0.4f], baseTime + 1030, "Q2UV-N5GT-HURS", 2, 0.9f, true);
     }
 
     public static IEnumerable<(float[], long, string, int, float, bool)> GenerateTestDataFor_IfCoordinatesNotProcessedDeferred()
