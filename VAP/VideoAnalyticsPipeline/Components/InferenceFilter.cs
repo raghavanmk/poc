@@ -103,9 +103,9 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
 
     internal static float[] MidPoint(float[] coordinates)
     {
-        //Format : [ymin, xmin, ymax, xmax]
-        var x = (float)Math.Round((coordinates[1] + coordinates[3]) / 2, 3);
-        var y = (float)Math.Round((coordinates[0] + coordinates[2]) / 2, 3);
+        //Format : [xmin, ymin, xmax, ymax]
+        var x = (float)Math.Round((coordinates[0] + coordinates[2]) / 2, 3);
+        var y = (float)Math.Round((coordinates[1] + coordinates[3]) / 2, 3);
 
         return [x, y];
     }
