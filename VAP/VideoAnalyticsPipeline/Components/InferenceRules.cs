@@ -18,7 +18,7 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
         inferenceFilter.IfCoordinatesNotOutOfBounds(output.Location!) 
         &&
         (
-            inferenceFilter.IfCoordinatesNotProcessed(output.Location!, data.Inference!.Timestamp, data.CameraSerial!, output.Class, output.Score) ||
+            inferenceFilter.IfCoordinatesNotProcessed(output.Location!, data.Inference!.Timestamp, data.CameraSerial!, output.Class, output.Score) &
             inferenceFilter.IfCoordinatesNotNeighbours(output, data.CameraSerial!, data.Inference.Timestamp)
         );    
 
