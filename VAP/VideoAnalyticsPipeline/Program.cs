@@ -20,6 +20,7 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
         .ConfigureAppConfiguration((hostContext, config) =>
         {
             config.AddJsonFile("appsettings.Serilog.json", optional: false, reloadOnChange: true);         
+            config.AddJsonFile("appsettings.Camera.json", optional: false, reloadOnChange: true);
         })
        .ConfigureServices((hostContext, services) =>
        {

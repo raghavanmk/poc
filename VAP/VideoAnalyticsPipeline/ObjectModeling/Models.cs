@@ -31,18 +31,25 @@ public class Image : Data
 
 public class ModelConfig
 {
-    public Dictionary<string, ModelInference>? ClassInference { get; set; }
+    public Dictionary<string, ModelInference>? Label { get; set; }
     public Dictionary<string, int[]>? Camera { get; set; }
+    public Dictionary<string, string>? LabelMap { get; set; }
 
     public ModelInference this[int classId]
     {
         get
         {
-            if(ClassInference!.TryGetValue(classId.ToString(), out var modelInference))
+            if(Label!.TryGetValue(GetLabel(classId), out var modelInference))
                 return modelInference!;
-
-            return ClassInference["Shared"]!;
+            
+            return Label["Shared"]!;
         }
+    }
+
+    private string GetLabel(int classId)
+    {
+        LabelMap!.TryGetValue(classId.ToString(), out var label);
+        return label!;
     }
 
     public int[] this[string cameraSerial]
@@ -55,10 +62,10 @@ public class ModelConfig
     }
     public float ModelConfidence(int classId)
     {
-        if (ClassInference!.TryGetValue(classId.ToString(), out var modelInference))
+        if (Label!.TryGetValue(GetLabel(classId), out var modelInference))
             return modelInference.Confidence;
 
-        return ClassInference["Shared"].Confidence;
+        return Label["Shared"].Confidence;
     }
 }
 
@@ -89,7 +96,6 @@ public class PipelineComponentsConfig
 }
 public class ModelInference
 {
-    public int? Class { get; set; }
     public float Confidence { get; set; }
     public int Timeout { get; set; }
     public bool Deferred { get; set; }

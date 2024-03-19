@@ -9,6 +9,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="appsettings.camera.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="appsettings.camera.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
 		<PackageReference Include="KdTree" Version="1.4.1" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />

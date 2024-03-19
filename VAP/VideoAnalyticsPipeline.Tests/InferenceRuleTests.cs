@@ -15,6 +15,17 @@ public class InferenceRuleTests
 
         modelConfig = new ModelConfig
         {
+            LabelMap = new Dictionary<string, string> 
+            {
+                ["0"] = "jacket",
+                ["1"] = "no-jacket",
+                ["2"] = "helmet",
+                ["3"] = "no-helmet",
+                ["4"] = "drum-on-pallet",
+                ["5"] = "drum-on-drum",
+                ["6"] = "drum-on-floor",
+                ["7"] = "drum-on-floor"
+            },
             Camera = new Dictionary<string, int[]> 
             {
                 ["Q2UV-N5GT-HURS"] = [ 1, 2, 6 ],
@@ -22,7 +33,7 @@ public class InferenceRuleTests
                 ["Q2UV-9LPF-KURS"] = [ 1 ],
                 ["Q2UV-5LPF-A973"] = [ 1, 2, 6 ],
             },
-            ClassInference = new Dictionary<string, ModelInference>
+            Label = new Dictionary<string, ModelInference>
             {
                 ["Shared"] = new ModelInference
                 {
@@ -31,16 +42,15 @@ public class InferenceRuleTests
                     Timeout = 1000,
                     RadiusLimit = 0.3f
                 },
-                ["6"] = new ModelInference
+                ["drum-on-floor"] = new ModelInference
                 {
                     Confidence = 0.7f,
-                    Class = 1,
                     Deferred = true,
                     Timeout = 1000,
                     RadiusLimit = 0.3f
                 }
             }
-    };
+        };
 
         inferenceFilter = new InferenceFilter(modelConfig, mockLogger.Object);
     }
