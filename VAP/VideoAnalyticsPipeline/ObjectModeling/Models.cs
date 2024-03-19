@@ -31,14 +31,14 @@ public class Image : Data
 
 public class ModelConfig
 {
-    public Dictionary<string, ModelInference> ClassDefaults { get; set; }
-    public Dictionary<string, int[]> Cameras { get; set; }
+    public Dictionary<string, ModelInference>? ClassDefaults { get; set; }
+    public Dictionary<string, int[]>? Cameras { get; set; }
 
     public ModelInference this[int classId]
     {
         get
         {
-            ClassDefaults.TryGetValue(classId.ToString(), out var modelInference);
+            ClassDefaults!.TryGetValue(classId.ToString(), out var modelInference);
             return modelInference!;
         }
     }
@@ -53,7 +53,7 @@ public class ModelConfig
     }
     public float ModelConfidence(int classId)
     {
-        if (ClassDefaults.TryGetValue(classId.ToString(), out var modelInference))
+        if (ClassDefaults!.TryGetValue(classId.ToString(), out var modelInference))
             return modelInference.Confidence;
 
         return 0;
