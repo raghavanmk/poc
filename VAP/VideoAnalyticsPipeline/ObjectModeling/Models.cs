@@ -105,5 +105,5 @@ public class Detection
 public class CameraDetails
 {
     public int[]? Class { get; set; }
-    public string? Name { get; set; }
+    public string? Location { get; set; }
 }

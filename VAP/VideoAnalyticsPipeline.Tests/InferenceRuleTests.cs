@@ -28,10 +28,10 @@ public class InferenceRuleTests
             },
             Camera = new Dictionary<string, CameraDetails> 
             {
-                 ["Q2UV-N5GT-HURS"] = new CameraDetails { Name = "Rail Dock West", Class = [1, 3] },
-                 ["Q2UV-5LPF-HURS"] = new CameraDetails { Name = "Depack Front Door CMB", Class = [1, 3] },
-                 ["Q2UV-QYDA-Z3CF"] = new CameraDetails { Name = "Rail Dock East", Class = [1, 3] },
-                 ["Q2UV-9LPF-KURS"] = new CameraDetails { Name = "Dummyy", Class = [1, 3] },
+                 ["Q2UV-N5GT-HURS"] = new CameraDetails { Location = "Rail Dock West", Class = [1, 3] },
+                 ["Q2UV-5LPF-HURS"] = new CameraDetails { Location = "Depack Front Door CMB", Class = [1, 3] },
+                 ["Q2UV-QYDA-Z3CF"] = new CameraDetails { Location = "Rail Dock East", Class = [1, 3] },
+                 ["Q2UV-9LPF-KURS"] = new CameraDetails { Location = "Dummyy", Class = [1, 3] },
             
             },
             ModelInference = new Dictionary<string, ModelInference>
