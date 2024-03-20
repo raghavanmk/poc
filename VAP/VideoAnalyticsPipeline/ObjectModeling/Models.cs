@@ -51,7 +51,7 @@ public class ModelConfig
         get
         {
             Camera!.TryGetValue(cameraSerial, out var details);
-            return details!.Class;
+            return details!.Class!;
         }
     }
     public float ModelConfidence(int classId)
@@ -104,6 +104,6 @@ public class Detection
 
 public class CameraDetails
 {
-    public int[] Class { get; set; }
-    public string Name { get; set; }
+    public int[]? Class { get; set; }
+    public string? Name { get; set; }
 }

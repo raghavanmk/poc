@@ -16,11 +16,11 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
                 var cameraName = configuration[$"Camera:{image.CameraSerial}:Name"];
 
-                var classes = data.Inference!.Outputs!.Select(x => x.Class).ToArray();
+                var classes = data.Inference!.Outputs!.Select(x => x.Class);
                 
                 var labels = "";
 
-                foreach (var classs in classes)  labels += configuration[$"LabelMap:{classs}"] + ", ";
+                foreach (var cls in classes)  labels += configuration[$"LabelMap:{cls}"] + ", ";
 
                 labels = labels.TrimEnd(',', ' ');
 
