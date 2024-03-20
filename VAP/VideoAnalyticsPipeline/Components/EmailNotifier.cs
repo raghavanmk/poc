@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Net.Mail;
+using System.Net;
 using System.Text;
+using System.Linq.Expressions;
 
 namespace VideoAnalyticsPipeline;
 internal class EmailNotifier(IConfiguration configuration, ChannelFactory channelFactory, MailManager mailManager, ILogger<EmailNotifier> logger) : IModule
-{
+{        
     public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
         var currentComponent = typeof(EmailNotifier).FullName!;
@@ -19,7 +22,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
                 var classes = data.Inference!.Outputs!.Select(x => x.Class);
                 
-                var labels = GetLables(classes, configuration);
+                var labels = GetLabels(classes, configuration);
 
                 if (image != null)
                     await mailManager.SendMail(image.ImageStream!, data.Inference!.ToString(), 
@@ -34,20 +37,15 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
         }
     }
 
-    private static string GetLables(IEnumerable<int> classes, IConfiguration configuration)
+    private static string GetLabels(IEnumerable<int> classes, IConfiguration configuration)
     {
         var labelsBuilder = new StringBuilder();
 
         foreach (var cls in classes)
         {
-            labelsBuilder.Append(configuration[$"LabelMap:{cls}"]);
-            labelsBuilder.Append(", ");
+            labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);            
         }
 
-        if (labelsBuilder.Length > 0)
-        {
-            labelsBuilder.Length -= 2;  // Remove the last comma and space
-        }
         return labelsBuilder.ToString();
 
     }

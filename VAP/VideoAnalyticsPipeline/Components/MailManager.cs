@@ -33,13 +33,13 @@ internal class MailManager
         };
 
         subject = configuration["Notification:Subject"] ?? "Violation Detected";
-        body = configuration["Notification:Message"] ?? "Violation Dectected";
+        body = configuration["Notification:Message"] ?? "Violation Detected";
         emails = configuration.GetSection("Notification:Email").Get<string[]>();
 
         this.logger = logger;
     }
     
-    internal async ValueTask SendMail(Stream imageStream, string infmessage, string camSerial, long timestamp, string camName, string labels, CancellationToken cancellationToken)
+    internal async ValueTask SendMail(Stream imageStream, string infMessage, string camSerial, long timestamp, string camName, string labels, CancellationToken cancellationToken)
     {
         try
         {
@@ -51,8 +51,9 @@ internal class MailManager
                 
                 using var message = new MailMessage(fromAddress, toAddress)
                 {
-                    Subject = subject,
-                    Body = string.Format(body, labels, infmessage, camSerial, camName)
+                    Subject = string.Format(subject,camSerial,camName),
+                    Body = string.Format(body, camSerial, camName, DateTimeOffset.FromUnixTimeMilliseconds(timestamp), labels, infMessage),
+                    IsBodyHtml = true
                 };
 
                 imageStream.Position = 0;
