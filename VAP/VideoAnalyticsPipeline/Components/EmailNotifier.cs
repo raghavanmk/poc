@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace VideoAnalyticsPipeline;
-internal class EmailNotifier(ChannelFactory channelFactory, MailManager mailManager, ILogger<EmailNotifier> logger) : IModule
+internal class EmailNotifier(IConfiguration configuration, ChannelFactory channelFactory, MailManager mailManager, ILogger<EmailNotifier> logger) : IModule
 {
     public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -13,8 +14,19 @@ internal class EmailNotifier(ChannelFactory channelFactory, MailManager mailMana
             {
                 var image = (Image)data;
 
+                var cameraName = configuration[$"Camera:{image.CameraSerial}:Name"];
+
+                var classes = data.Inference!.Outputs!.Select(x => x.Class).ToArray();
+                
+                var labels = "";
+
+                foreach (var classs in classes)  labels += configuration[$"LabelMap:{classs}"] + ", ";
+
+                labels = labels.TrimEnd(',', ' ');
+
                 if (image != null)
-                    await mailManager.SendMail(image.ImageStream!, data.Inference!.ToString(), image.CameraSerial!, image.Inference!.Timestamp, cancellationToken);
+
+                    await mailManager.SendMail(image.ImageStream!, data.Inference!.ToString(), image.CameraSerial!, image.Inference!.Timestamp, cameraName!, labels, cancellationToken);
                 else
                     logger.LogError("Inferred image not available to send email for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
             }

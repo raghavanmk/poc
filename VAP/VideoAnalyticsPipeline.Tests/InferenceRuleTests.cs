@@ -26,12 +26,13 @@ public class InferenceRuleTests
                 [6] = "drum-on-floor",
                 [7] = "drum-on-floor"
             },
-            Camera = new Dictionary<string, int[]> 
+            Camera = new Dictionary<string, CameraDetails> 
             {
-                ["Q2UV-N5GT-HURS"] = [ 1, 2, 6 ],
-                ["Q2UV-QYDA-Z3CF"] = [ 1, 3 ],
-                ["Q2UV-9LPF-KURS"] = [ 1 ],
-                ["Q2UV-5LPF-A973"] = [ 1, 2, 6 ],
+                 ["Q2UV-N5GT-HURS"] = new CameraDetails { Name = "Rail Dock West", Class = [1, 3] },
+                 ["Q2UV-5LPF-HURS"] = new CameraDetails { Name = "Depack Front Door CMB", Class = [1, 3] },
+                 ["Q2UV-QYDA-Z3CF"] = new CameraDetails { Name = "Rail Dock East", Class = [1, 3] },
+                 ["Q2UV-9LPF-KURS"] = new CameraDetails { Name = "Dummyy", Class = [1, 3] },
+            
             },
             ModelInference = new Dictionary<string, ModelInference>
             {

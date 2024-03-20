@@ -38,8 +38,8 @@ internal class MailManager
 
         this.logger = logger;
     }
-
-    internal async ValueTask SendMail(Stream imageStream, string infmessage, string camSerial, long timestamp, CancellationToken cancellationToken)
+    
+    internal async ValueTask SendMail(Stream imageStream, string infmessage, string camSerial, long timestamp, string camName, string labels, CancellationToken cancellationToken)
     {
         try
         {
@@ -48,11 +48,11 @@ internal class MailManager
                 logger.LogInformation("Sending email to {email}", email);
 
                 var toAddress = new MailAddress(email);
-
+                
                 using var message = new MailMessage(fromAddress, toAddress)
                 {
                     Subject = subject,
-                    Body = string.Format(body, infmessage, camSerial)
+                    Body = string.Format(body, infmessage, camSerial, camName, labels)
                 };
 
                 imageStream.Position = 0;
