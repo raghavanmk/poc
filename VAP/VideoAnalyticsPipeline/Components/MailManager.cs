@@ -52,7 +52,7 @@ internal class MailManager
                 using var message = new MailMessage(fromAddress, toAddress)
                 {
                     Subject = subject,
-                    Body = string.Format(body, infmessage, camSerial, camName, labels)
+                    Body = string.Format(body, labels, infmessage, camSerial, camName)
                 };
 
                 imageStream.Position = 0;
