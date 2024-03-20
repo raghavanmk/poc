@@ -32,7 +32,7 @@ public class Image : Data
 public class ModelConfig
 {
     public Dictionary<string, ModelInference>? ModelInference { get; set; }
-    public Dictionary<string, int[]>? Camera { get; set; }
+    public Dictionary<string, CameraDetails>? Camera { get; set; }
     public Dictionary<int, string>? LabelMap { get; set; }
 
     public ModelInference this[int classId]
@@ -50,8 +50,8 @@ public class ModelConfig
     {
         get
         {
-            Camera!.TryGetValue(cameraSerial, out var classArr);
-            return classArr!;
+            Camera!.TryGetValue(cameraSerial, out var details);
+            return details!.Class!;
         }
     }
     public float ModelConfidence(int classId)
@@ -100,4 +100,10 @@ public class Detection
 {
     public Output? Output { get; set; }
     public long Timestamp { get; set; }
+}
+
+public class CameraDetails
+{
+    public int[]? Class { get; set; }
+    public string? Name { get; set; }
 }
