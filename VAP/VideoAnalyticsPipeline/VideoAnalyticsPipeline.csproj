@@ -42,10 +42,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="appsettings.Notification.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="appsettings.MQTT.json">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="appsettings.serilog.json">
+		<None Update="appsettings.Serilog.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Include="appsettings.Camera.json">

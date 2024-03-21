@@ -8,9 +8,6 @@ namespace VideoAnalyticsPipeline;
 internal class MailManager
 {
     private readonly SmtpClient smtpClient;
-    private readonly string subject;
-    private readonly string body;
-    private readonly string[]? emails;
     private readonly ILogger<MailManager> logger;
     private readonly MailAddress fromAddress;
 
@@ -32,40 +29,33 @@ internal class MailManager
             Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
         };
 
-        subject = configuration["Notification:Subject"] ?? "Violation Detected";
-        body = configuration["Notification:Message"] ?? "Violation Detected";
-        emails = configuration.GetSection("Notification:Email").Get<string[]>();
-
         this.logger = logger;
     }
-    
-    internal async ValueTask SendMail(Stream imageStream, string infMessage, string camSerial, long timestamp, string camName, string labels, CancellationToken cancellationToken)
+
+    internal async ValueTask SendMail(string fromAddress, string displayName, string toAddress, string subject, string body, Stream imageStream, string? attachmentName, string? mediaType, CancellationToken cancellationToken)
     {
         try
         {
-            foreach (var email in emails ?? Enumerable.Empty<string>())
+            var from = new MailAddress(fromAddress, displayName);
+            var to = new MailAddress(toAddress);
+
+            using var message = new MailMessage(from, to)
             {
-                logger.LogInformation("Sending email to {email}", email);
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
+            };            
 
-                var toAddress = new MailAddress(email);
-                
-                using var message = new MailMessage(fromAddress, toAddress)
-                {
-                    Subject = string.Format(subject,camSerial,camName),
-                    Body = string.Format(body, camSerial, camName, DateTimeOffset.FromUnixTimeMilliseconds(timestamp), labels, infMessage),
-                    IsBodyHtml = true
-                };
+            imageStream.Position = 0;
+            using var memoryStream = new MemoryStream();
+            await imageStream.CopyToAsync(memoryStream, cancellationToken);
+            memoryStream.Position = 0;
 
-                imageStream.Position = 0;
-                using var memoryStream = new MemoryStream();
-                await imageStream.CopyToAsync(memoryStream, cancellationToken);
-                memoryStream.Position = 0;
+            var attachment = new Attachment(memoryStream, attachmentName, mediaType);
+            message.Attachments.Add(attachment);
 
-                var attachment = new Attachment(memoryStream, $"{camSerial}_{timestamp}.jpeg", "image/jpeg");
-                message.Attachments.Add(attachment);
+            await smtpClient.SendMailAsync(message, cancellationToken);
 
-                await smtpClient.SendMailAsync(message, cancellationToken);
-            }
         }
         catch (Exception ex)
         {

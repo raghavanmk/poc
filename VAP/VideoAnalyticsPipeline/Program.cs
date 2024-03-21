@@ -21,6 +21,7 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
         {
             config.AddJsonFile("appsettings.Serilog.json", optional: false, reloadOnChange: true);         
             config.AddJsonFile("appsettings.Camera.json", optional: false, reloadOnChange: true);
+            config.AddJsonFile("appsettings.Notification.json", optional: false, reloadOnChange: true);
             config.AddJsonFile("appsettings.MQTT.json", optional: false, reloadOnChange: true);
         })
        .ConfigureServices((hostContext, services) =>
