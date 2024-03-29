@@ -14,10 +14,7 @@ internal static class HttpClientExtn
         
         var timeout = CalculateTimeout(retryCount, retryInterval, bufferInterval);
 
-        var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(timeout));
-
-        services.AddHttpClient("HttpClientWithRetry")
-                .AddPolicyHandler(timeoutPolicy)
+        services.AddHttpClient("HttpClientWithRetry",client => client.Timeout = TimeSpan.FromSeconds(timeout))
                 .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
                 .WaitAndRetryAsync(retryCount,
                      retry => TimeSpan.FromSeconds(retry * retryInterval),

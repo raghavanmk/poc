@@ -12,8 +12,6 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
         await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
             if (!data.ViolationDetected) continue;
-            
-            logger.LogInformation("Downloading snapshot");
 
             try
             {
@@ -29,7 +27,7 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error retrieving image for {camSerial} at {timestamp}",data.CameraSerial, data.Inference!.Timestamp);
+                logger.LogError(ex, "Error retrieving image for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
             }
         }
     }
@@ -42,6 +40,8 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
             { "fullframe", "false"}
         };
 
+        logger.LogInformation("Retrieving Image Url {timestamp}", data.Inference!.Timestamp);
+
         var result = await proxy.GetImageUrl(payload, data.CameraSerial!, cancellationToken);
 
         var jsonDocument = JsonDocument.Parse(result);
@@ -51,6 +51,8 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
         var urlValue = urlElement.GetString();
 
         if (urlValue == null) return null;
+
+        logger.LogInformation("Retrieving Image {timestamp}", data.Inference!.Timestamp);
 
         var imageStream = await proxy.GetImage(urlValue, cancellationToken);
 
