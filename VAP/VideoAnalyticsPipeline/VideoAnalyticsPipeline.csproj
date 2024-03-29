@@ -6,6 +6,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<NoWarn>blob</NoWarn>
+		<!-- Replaces dev machine source file paths in exceptions thrown with ./ -->
+		<PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
 	</PropertyGroup>
 
 	<ItemGroup>
