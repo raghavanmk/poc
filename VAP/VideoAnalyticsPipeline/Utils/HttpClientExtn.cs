@@ -7,13 +7,19 @@ namespace VideoAnalyticsPipeline;
 internal static class HttpClientExtn
 {
     internal static IServiceCollection AddHttpClientPolicy(this IServiceCollection services, Logger logger, IConfiguration configuration)
-    {        
+    {
         var retryCount = Convert.ToInt16(configuration["Polly:RetryCount"]);
         var retryInterval = Convert.ToInt16(configuration["Polly:RetryInterval"]);
+        var bufferInterval = Convert.ToInt16(configuration["Polly:BufferInterval"]);
+        
+        var timeout = CalculateTimeout(retryCount, retryInterval, bufferInterval);
+
+        var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(timeout));
 
         services.AddHttpClient("HttpClientWithRetry")
-                 .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
-                 .WaitAndRetryAsync(retryCount,
+                .AddPolicyHandler(timeoutPolicy)
+                .AddPolicyHandler(Policy.HandleResult<HttpResponseMessage>(response => !response.IsSuccessStatusCode)
+                .WaitAndRetryAsync(retryCount,
                      retry => TimeSpan.FromSeconds(retry * retryInterval),
                      onRetry: (outcome, timespan, retryAttempt, context) =>
                      {
@@ -22,4 +28,9 @@ internal static class HttpClientExtn
 
         return services;
     }
+
+    // calculate timeout based on retry count and interval.it follows arithmetic progression + 100s buffer
+    internal static int CalculateTimeout(int retryCount, int retryInterval, int bufferInterval) =>
+        (retryCount * (retryInterval * 2 + (retryCount - 1) * retryInterval)) / 2 + bufferInterval;
+
 }

@@ -10,6 +10,7 @@ internal class MailManager
     private readonly SmtpClient smtpClient;
     private readonly ILogger<MailManager> logger;
     private readonly MailAddress fromAddress;
+    private readonly bool isBodyHtml;
 
     public MailManager(IConfiguration configuration, ILogger<MailManager> logger)
     {
@@ -29,10 +30,12 @@ internal class MailManager
             Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
         };
 
+        isBodyHtml = true;
         this.logger = logger;
     }
 
-    internal async ValueTask SendMail(string fromAddress, string displayName, string toAddress, string subject, string body, Stream imageStream, string? attachmentName, string? mediaType, CancellationToken cancellationToken)
+    internal async ValueTask SendMail(string fromAddress, string displayName, string toAddress, string subject, string body,
+        Stream attachmentStream, string? attachmentName, string? mediaType, CancellationToken cancellationToken)
     {
         try
         {
@@ -43,12 +46,12 @@ internal class MailManager
             {
                 Subject = subject,
                 Body = body,
-                IsBodyHtml = true
+                IsBodyHtml = isBodyHtml
             };            
 
-            imageStream.Position = 0;
+            attachmentStream.Position = 0;
             using var memoryStream = new MemoryStream();
-            await imageStream.CopyToAsync(memoryStream, cancellationToken);
+            await attachmentStream.CopyToAsync(memoryStream, cancellationToken);
             memoryStream.Position = 0;
 
             var attachment = new Attachment(memoryStream, attachmentName, mediaType);

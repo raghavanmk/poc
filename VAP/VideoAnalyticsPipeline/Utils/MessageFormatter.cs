@@ -1,11 +1,16 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace VideoAnalyticsPipeline;
 internal class MessageFormatter
 {
     static readonly JsonSerializerOptions serializerOptions =
-        new() { PropertyNameCaseInsensitive = true, Converters = { new RoundFloatArrayConverter() } };
+        new()
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new RoundFloatArrayConverter() }
+        };
 
     internal static async ValueTask<T?> DeserializeAsync<T>(byte[] message, CancellationToken cancellationToken) =>
          await JsonSerializer.DeserializeAsync<T>(new MemoryStream(message), serializerOptions, cancellationToken);
@@ -35,9 +40,7 @@ internal class RoundFloatArrayConverter : JsonConverter<float[]>
         throw new JsonException();
     }
 
-    public override void Write(Utf8JsonWriter writer, float[] values, JsonSerializerOptions options) => 
+    public override void Write(Utf8JsonWriter writer, float[] values, JsonSerializerOptions options) =>
         JsonSerializer.Serialize(writer, values, options);
 
 }
-
-

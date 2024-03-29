@@ -1,14 +1,10 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Net.Mail;
-using System.Net;
 using System.Text;
-using System.Linq.Expressions;
 
 namespace VideoAnalyticsPipeline;
 internal class EmailNotifier(IConfiguration configuration, ChannelFactory channelFactory, MailManager mailManager, ILogger<EmailNotifier> logger) : IModule
 {
-    //private readonly string fromAddress = configuration["SMTP:Address"]!, configuration["SMTP:DisplayName"]!;
     private readonly string[]? emails = configuration.GetSection("Notification:Email").Get<string[]>();
     private readonly string subject = configuration["Notification:Subject"] ?? "Violation Detected";
     private readonly string body = configuration["Notification:Message"] ?? "Violation Detected";
@@ -26,21 +22,21 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
                 var classes = data.Inference!.Outputs!.Select(x => x.Class);
 
-                var labels = GetLabels(classes, configuration);
+                var labels = GetLabels(classes);
 
                 if (image != null)                    
                     await SendEmail(image.CameraSerial!, cameraName, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
                 else
-                    logger.LogError("Inferred image not available to send email for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
+                    logger.LogError("Inferred image not available toAddress send toAddress for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error sending email for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
+                logger.LogError(ex, "Error sending toAddress for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
             }
         }
     }
 
-    private static string GetLabels(IEnumerable<int> classes, IConfiguration configuration)
+    private string GetLabels(IEnumerable<int> classes)
     {
         var labelsBuilder = new StringBuilder();
 
@@ -53,11 +49,12 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
     }
 
-    private async Task SendEmail(string camSerial, string camName, long timeStamp, string labels, string infMessage, Stream image, CancellationToken cancellationToken)
+    private async ValueTask SendEmail(string camSerial, string camName, long timeStamp, string labels, string infMessage, 
+        Stream image, CancellationToken cancellationToken)
     {
-        foreach (var email in emails ?? Enumerable.Empty<string>())
+        foreach (var toAddress in emails ?? Enumerable.Empty<string>())
         {
-            logger.LogInformation("Sending email to {email}", email);            
+            logger.LogInformation("Sending toAddress toAddress {toAddress}", toAddress);            
 
             var fromAddress = configuration["SMTP:Address"]!;
             var displayName = configuration["SMTP:DisplayName"]!;
@@ -66,7 +63,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
             var attachmentName = $"{camSerial}_{timeStamp}.jpeg";
             var mediaType = "image/jpeg";            
 
-            await mailManager.SendMail(fromAddress, displayName, email, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
+            await mailManager.SendMail(fromAddress, displayName, toAddress, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
         }
     }
 }
