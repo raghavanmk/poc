@@ -32,6 +32,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
     // When a new set of coordinates is received, the key is checked in the dictionary
     // If the key is found and the timeStamp is within the interval, the coordinates are considered processed
     // If the key is found and the timeStamp is outside the interval, the coordinates are considered not processed and timestamp is updated
+    // If deferred flag is set on any model, it means it should not be processed first time a violation is detected. It wil be processed on subsequent violations detected 
 
     internal bool IfCoordinatesNotProcessed(float[] coordinates, long timeStamp, string camSerial, int classId, float confidence)
     {
@@ -67,7 +68,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         if (!kdTree.TryGetValue(key, out var tree))
         {
             tree = new KdTree<float, Detection>(kdTreeDimension, new FloatMath());
-            kdTree[cameraSerial + output.Class] = tree;
+            kdTree[key] = tree;
         }
 
         // Find the center of the bounding box
