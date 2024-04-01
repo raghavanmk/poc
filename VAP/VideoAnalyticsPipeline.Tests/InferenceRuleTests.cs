@@ -15,7 +15,7 @@ public class InferenceRuleTests
 
         modelConfig = new ModelConfig
         {
-            LabelMap = new Dictionary<int, string> 
+            LabelMap = new Dictionary<int, string>
             {
                 [0] = "jacket",
                 [1] = "no-jacket",
@@ -26,27 +26,51 @@ public class InferenceRuleTests
                 [6] = "drum-on-floor",
                 [7] = "drum-on-floor"
             },
-            Camera = new Dictionary<string, CameraDetails> 
+            Camera = new Dictionary<string, CameraDetails>
             {
-                 ["Q2UV-N5GT-HURS"] = new CameraDetails { Location = "Rail Dock West", Class = [1, 3] },
-                 ["Q2UV-5LPF-HURS"] = new CameraDetails { Location = "Depack Front Door CMB", Class = [1, 3] },
-                 ["Q2UV-QYDA-Z3CF"] = new CameraDetails { Location = "Rail Dock East", Class = [1, 3] },
-                 ["Q2UV-9LPF-KURS"] = new CameraDetails { Location = "Dummyy", Class = [1, 3] },
-            
+                ["Q2UV-N5GT-HURS"] = new CameraDetails { Location = "Rail Dock West", Class = [1, 3] },
+                ["Q2UV-5LPF-HURS"] = new CameraDetails { Location = "Depack Front Door CMB", Class = [1, 3] },
+                ["Q2UV-QYDA-Z3CF"] = new CameraDetails { Location = "Rail Dock East", Class = [1, 3] },
+                ["Q2UV-9LPF-KURS"] = new CameraDetails { Location = "Dummyy", Class = [1, 3] },
+
             },
             ModelInference = new Dictionary<string, ModelInference>
             {
                 ["Shared"] = new ModelInference
                 {
                     Confidence = 0.7f,
-                    Deferred = false,
-                    Timeout = 1000,
-                    RadiusLimit = 0.3f
+                    Deferred = false
                 },
                 ["drum-on-floor"] = new ModelInference
                 {
                     Confidence = 0.7f,
-                    Deferred = true,
+                    Deferred = true
+                }
+            },
+            CameraFilter = new Dictionary<string, CameraFilter>
+            {
+                ["Shared"] = new CameraFilter
+                {
+                    Timeout = 1000,
+                    RadiusLimit = 0.3f
+                },
+                ["Q2UV-N5GT-HURS"] = new CameraFilter
+                {
+                    Timeout = 1000,
+                    RadiusLimit = 0.3f
+                },
+                ["Q2UV-5LPF-HURS"] = new CameraFilter
+                {
+                    Timeout = 1000,
+                    RadiusLimit = 0.3f
+                },
+                ["Q2UV-QYDA-Z3CF"] = new CameraFilter
+                {
+                    Timeout = 1000,
+                    RadiusLimit = 0.3f
+                },
+                ["Q2UV-9LPF-KURS"] = new CameraFilter
+                {
                     Timeout = 1000,
                     RadiusLimit = 0.3f
                 }

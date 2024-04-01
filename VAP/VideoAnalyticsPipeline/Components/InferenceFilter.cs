@@ -34,20 +34,22 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
     // If the key is found and the timeStamp is outside the interval, the coordinates are considered not processed and timestamp is updated
     // If deferred flag is set on any model, it means it should not be processed first time a violation is detected. It wil be processed on subsequent violations detected 
 
-    internal bool IfCoordinatesNotProcessed(float[] coordinates, long timeStamp, string camSerial, int classId, float confidence)
+    internal bool IfCoordinatesNotProcessed(float[] coordinates, long timeStamp, string cameraSerial, int classId, float confidence)
     {
         var modelInference = modelConfig[classId];
 
-        var key = GenerateKey(coordinates, camSerial, classId, confidence);
+        var key = GenerateKey(coordinates, cameraSerial, classId, confidence);
         if (processedCoordinates.TryGetValue(key, out var cachedTimestamp))
         {
-            if (timeStamp - cachedTimestamp > modelInference.Timeout)
+            var timeout = modelConfig.Timeout(cameraSerial);
+
+            if (timeStamp - cachedTimestamp > timeout)
             {
                 processedCoordinates[key] = timeStamp;
                 return true;
             }
-            logger.LogWarning("Coordinates {coordinates} for camera {camSerial} for class {classId} with confidence {confidence} already processed at {cachedTimestamp}",
-                coordinates, camSerial, classId, confidence, cachedTimestamp);
+            logger.LogWarning("Coordinates {coordinates} for camera {cameraSerial} for class {classId} with confidence {confidence} already processed at {cachedTimestamp}",
+                coordinates, cameraSerial, classId, confidence, cachedTimestamp);
             return false;
         }
         else
@@ -62,6 +64,9 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
     {
         var modelInference = modelConfig[output.Class];
 
+        var radiusLimit = modelConfig.RadiusLimit(cameraSerial);
+        var timeout = modelConfig.Timeout(cameraSerial); ;
+
         var key = cameraSerial + output.Class;
 
         // Check if a Kd tree exists for the class in that camera; if not, create and add it to the dictionary
@@ -75,10 +80,10 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         var midPoint = MidPoint(output.Location!);
 
         // Perform radial search to find all the detections within the specified radius from the center
-        var neighbors = tree.RadialSearch(midPoint, modelInference.RadiusLimit);
+        var neighbors = tree.RadialSearch(midPoint, radiusLimit);
 
         // Check if any neighbor's timestamp is within the time constraint; if yes, ignore the current output
-        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < modelInference.Timeout))
+        if (neighbors.Length > 0 && neighbors.Any(n => timestamp - n.Value.Timestamp < timeout))
         {
             logger.LogWarning("Coordinates {coordinates} are neighbours to already processed", output.Location);
             return false;

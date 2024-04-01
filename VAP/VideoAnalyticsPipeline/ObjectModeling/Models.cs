@@ -34,14 +34,15 @@ public class ModelConfig
     public Dictionary<string, ModelInference>? ModelInference { get; set; }
     public Dictionary<string, CameraDetails>? Camera { get; set; }
     public Dictionary<int, string>? LabelMap { get; set; }
+    public Dictionary<string, CameraFilter>? CameraFilter { get; set; }
 
     public ModelInference this[int classId]
     {
         get
         {
-            if(ModelInference!.TryGetValue(LabelMap![classId], out var modelInference))
+            if (ModelInference!.TryGetValue(LabelMap![classId], out var modelInference))
                 return modelInference!;
-            
+
             return ModelInference["Shared"]!;
         }
     }
@@ -50,8 +51,10 @@ public class ModelConfig
     {
         get
         {
-            Camera!.TryGetValue(cameraSerial, out var details);
-            return details!.Class!;
+            if(Camera!.TryGetValue(cameraSerial, out var camera))
+                return camera.Class!;
+
+            return Camera!["Shared"].Class!;
         }
     }
     public float ModelConfidence(int classId)
@@ -60,6 +63,22 @@ public class ModelConfig
             return modelInference.Confidence;
 
         return ModelInference["Shared"].Confidence;
+    }
+
+    public float RadiusLimit(string cameraSerial)
+    {
+        if (CameraFilter!.TryGetValue(cameraSerial, out var cameraFilter))
+            return cameraFilter.RadiusLimit;
+
+        return CameraFilter!["Shared"].RadiusLimit;
+    }
+
+    public long Timeout(string cameraSerial)
+    {
+        if (CameraFilter!.TryGetValue(cameraSerial, out var cameraFilter))
+            return cameraFilter.Timeout;
+
+        return CameraFilter!["Shared"].Timeout;
     }
 }
 
@@ -91,9 +110,7 @@ public class PipelineComponentsConfig
 public class ModelInference
 {
     public float Confidence { get; set; }
-    public int Timeout { get; set; }
     public bool Deferred { get; set; }
-    public float RadiusLimit { get; set; }
 }
 
 public class Detection
@@ -106,4 +123,11 @@ public class CameraDetails
 {
     public int[]? Class { get; set; }
     public string? Location { get; set; }
+}
+
+public class  CameraFilter
+{
+    public long Timeout { get; set; }
+    public float RadiusLimit { get; set; }
+
 }

@@ -50,6 +50,7 @@ internal static class PipelineExtn
     {
         ModelInference = configuration.GetSection("ModelInference").Get<Dictionary<string, ModelInference>>(),
         Camera = configuration.GetSection("Camera").Get<Dictionary<string, CameraDetails>>(),
+        CameraFilter = configuration.GetSection("CameraFilter").Get<Dictionary<string, CameraFilter>>(),
         LabelMap = configuration.GetSection("LabelMap").Get<Dictionary<string, string>>()?.ToDictionary(kvp => int.Parse(kvp.Key), kvp => kvp.Value)
     };
 
