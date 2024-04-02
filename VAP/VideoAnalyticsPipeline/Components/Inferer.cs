@@ -13,7 +13,7 @@ internal class Inferer(ChannelFactory channelFactory, ILogger<Inferer> logger, I
             {
                 if (!infererRules.TryDetectViolation(data, out var violations)) continue;
 
-                logger.LogInformation("Violation detected for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
+                logger.LogInformation("Violation detected in message {message}, inferred from camera {camSerial} at {timestamp}", data.Inference!.ToString(), data.CameraSerial, data.Inference!.Timestamp);
                 data.ViolationDetected = true;
                 data.Inference!.Outputs = violations;
 

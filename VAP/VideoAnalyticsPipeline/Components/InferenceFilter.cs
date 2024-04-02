@@ -2,6 +2,7 @@
 using KdTree;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace VideoAnalyticsPipeline.Components;
 internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter> logger)
@@ -55,7 +56,10 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         else
         {
             if (processedCoordinates.TryAdd(key, timeStamp))
+            {
+                logger.LogInformation("Key {key} added to cache", key);
                 return !modelInference.Deferred;
+            }
 
             throw new InvalidOperationException("Failed to add coordinates to cache");
         }
@@ -103,8 +107,15 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
     internal string GenerateKey(float[] coordinates, string camSerial, int classId, float confidence)
     {
         var confidenceRange = confidence < modelConfig.ModelConfidence(classId) ? "low" : "high";
-        var key = string.Join(',', coordinates) + "," + camSerial + "," + classId + "," + confidenceRange;
-        return key;
+        var key = new StringBuilder();
+        key.Append(string.Join(',', coordinates));
+        key.Append(',');
+        key.Append(camSerial);
+        key.Append(',');
+        key.Append(classId);
+        key.Append(',');
+        key.Append(confidenceRange);
+        return key.ToString();
     }
 
     internal static float[] MidPoint(float[] coordinates)
