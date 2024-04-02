@@ -54,7 +54,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
     {
         foreach (var toAddress in emails ?? Enumerable.Empty<string>())
         {
-            logger.LogInformation("Sending toAddress toAddress {toAddress}", toAddress);            
+            logger.LogInformation("Sending email {toAddress}", toAddress);            
 
             var fromAddress = configuration["SMTP:Address"]!;
             var displayName = configuration["SMTP:DisplayName"]!;
