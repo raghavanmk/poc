@@ -58,7 +58,12 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
             if (processedCoordinates.TryAdd(key, timeStamp))
             {
                 logger.LogInformation("Key {key} added to cache", key);
-                return !modelInference.Deferred;
+                if(modelInference.Deferred)
+                {
+                    logger.LogInformation("Coordinates {coordinates} for camera {cameraSerial} for class {classId} with confidence {confidence} has deferred flag set. Processing for violations will happen once it has crossed timeout threshold.", coordinates, cameraSerial, classId, confidence);
+                    return false;
+                }
+                return true;
             }
 
             throw new InvalidOperationException("Failed to add coordinates to cache");
