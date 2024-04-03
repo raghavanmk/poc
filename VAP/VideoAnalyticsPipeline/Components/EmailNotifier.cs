@@ -42,7 +42,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
         foreach (var cls in classes.Distinct())
         {
-            labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}, "]);
+            labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);
         }
         labelsBuilder.Length -= 2;
         return labelsBuilder.ToString();
