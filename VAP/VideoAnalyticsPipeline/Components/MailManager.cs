@@ -6,29 +6,21 @@ using System.Net.Mail;
 namespace VideoAnalyticsPipeline;
 
 internal class MailManager
-{
-    private readonly SmtpClient smtpClient;
+{    
     private readonly ILogger<MailManager> logger;
+    private readonly string fromPassword;
+    private readonly string smtpHost;
+    private readonly short smtpPort;
     private readonly MailAddress fromAddress;
     private readonly bool isBodyHtml;
 
     public MailManager(IConfiguration configuration, ILogger<MailManager> logger)
     {
-        string fromPassword = configuration["SMTP:Password"]!;
-        string smtpHost = configuration["SMTP:Host"]!;
-        int smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
+        fromPassword = configuration["SMTP:Password"]!;
+        smtpHost = configuration["SMTP:Host"]!;
+        smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
 
         fromAddress = new MailAddress(configuration["SMTP:Address"]!, configuration["SMTP:DisplayName"]!);
-
-        smtpClient = new SmtpClient
-        {
-            Host = smtpHost,
-            Port = smtpPort,
-            EnableSsl = true,
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-        };
 
         isBodyHtml = true;
         this.logger = logger;
@@ -47,7 +39,7 @@ internal class MailManager
                 Subject = subject,
                 Body = body,
                 IsBodyHtml = isBodyHtml
-            };            
+            };
 
             attachmentStream.Position = 0;
             using var memoryStream = new MemoryStream();
@@ -57,7 +49,7 @@ internal class MailManager
             var attachment = new Attachment(memoryStream, attachmentName, mediaType);
             message.Attachments.Add(attachment);
 
-            await smtpClient.SendMailAsync(message, cancellationToken);
+            await CreateSmtpClient().SendMailAsync(message, cancellationToken);
 
         }
         catch (Exception ex)
@@ -65,5 +57,16 @@ internal class MailManager
             logger.LogError(ex, "Error sending email");
         }
     }
+
+    SmtpClient CreateSmtpClient() =>
+    new()
+    {
+        Host = smtpHost,
+        Port = smtpPort,
+        EnableSsl = true,
+        DeliveryMethod = SmtpDeliveryMethod.Network,
+        UseDefaultCredentials = false,
+        Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+    };
 }
 

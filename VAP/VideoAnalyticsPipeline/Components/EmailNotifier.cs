@@ -24,7 +24,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
                 var labels = GetLabels(classes);
 
-                if (image != null)                    
+                if (image != null)
                     await SendEmail(image.CameraSerial!, cameraName, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
                 else
                     logger.LogError("Inferred image not available toAddress send toAddress for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
@@ -49,21 +49,25 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
     }
 
-    private async ValueTask SendEmail(string camSerial, string camName, long timeStamp, string labels, string infMessage, 
+    private async ValueTask SendEmail(string camSerial, string camName, long timeStamp, string labels, string infMessage,
         Stream image, CancellationToken cancellationToken)
     {
-        foreach (var toAddress in emails ?? Enumerable.Empty<string>())
+        var sendEmailTasks = (emails ?? []).Select(async toAddress =>
         {
-            logger.LogInformation("Sending email to {toAddress}", toAddress);            
+            logger.LogInformation("Sending email to {toAddress}", toAddress);
 
             var fromAddress = configuration["SMTP:Address"]!;
             var displayName = configuration["SMTP:DisplayName"]!;
             var mailSubject = string.Format(subject, camSerial, camName);
             var mailBody = string.Format(body, camSerial, camName, DateTimeOffset.FromUnixTimeMilliseconds(timeStamp), labels, infMessage);
             var attachmentName = $"{camSerial}_{timeStamp}.jpeg";
-            var mediaType = "image/jpeg";            
+            var mediaType = "image/jpeg";
 
             await mailManager.SendMail(fromAddress, displayName, toAddress, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
-        }
+
+        });
+
+        await Task.WhenAll(sendEmailTasks);
+
     }
 }
