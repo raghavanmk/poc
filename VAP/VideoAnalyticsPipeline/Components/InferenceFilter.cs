@@ -71,6 +71,8 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
     }
     internal bool IfCoordinatesNotNeighbours(Output output, string cameraSerial, long timestamp)
     {
+        logger.LogInformation("Checking if coordinates {coordinates} are neighbours to already processed", output.Location);
+
         var modelInference = modelConfig[output.Class];
 
         var radiusLimit = modelConfig.RadiusLimit(cameraSerial);
@@ -106,6 +108,9 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         };
 
         tree.Add(midPoint, detection);
+
+        logger.LogInformation("Coordinates {coordinates} are not neighbours to already processed and are added to KD Tree", output.Location);    
+
         return true;
     }
 
