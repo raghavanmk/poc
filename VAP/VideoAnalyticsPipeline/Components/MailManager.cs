@@ -6,40 +6,53 @@ using System.Net.Mail;
 namespace VideoAnalyticsPipeline;
 
 internal class MailManager
-{    
+{
+    private readonly SmtpClient smtpClient;
     private readonly ILogger<MailManager> logger;
-    private readonly string fromPassword;
-    private readonly string smtpHost;
-    private readonly short smtpPort;
     private readonly MailAddress fromAddress;
     private readonly bool isBodyHtml;
 
     public MailManager(IConfiguration configuration, ILogger<MailManager> logger)
     {
-        fromPassword = configuration["SMTP:Password"]!;
-        smtpHost = configuration["SMTP:Host"]!;
-        smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
+        string fromPassword = configuration["SMTP:Password"]!;
+        string smtpHost = configuration["SMTP:Host"]!;
+        int smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
 
         fromAddress = new MailAddress(configuration["SMTP:Address"]!, configuration["SMTP:DisplayName"]!);
+
+        smtpClient = new SmtpClient
+        {
+            Host = smtpHost,
+            Port = smtpPort,
+            EnableSsl = true,
+            DeliveryMethod = SmtpDeliveryMethod.Network,
+            UseDefaultCredentials = false,
+            Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+        };
 
         isBodyHtml = true;
         this.logger = logger;
     }
 
-    internal async ValueTask SendMail(string fromAddress, string displayName, string toAddress, string subject, string body,
+    internal async ValueTask SendMail(string fromAddress, string displayName, string[] toAddresses, string subject, string body,
         Stream attachmentStream, string? attachmentName, string? mediaType, CancellationToken cancellationToken)
     {
         try
         {
             var from = new MailAddress(fromAddress, displayName);
-            var to = new MailAddress(toAddress);
-
-            using var message = new MailMessage(from, to)
+           
+            using var message = new MailMessage
             {
+                From = from,
                 Subject = subject,
                 Body = body,
                 IsBodyHtml = isBodyHtml
             };
+
+            foreach (var toAddress in toAddresses)
+            {
+                message.Bcc.Add(toAddress);
+            }
 
             attachmentStream.Position = 0;
             using var memoryStream = new MemoryStream();
@@ -49,7 +62,7 @@ internal class MailManager
             var attachment = new Attachment(memoryStream, attachmentName, mediaType);
             message.Attachments.Add(attachment);
 
-            await CreateSmtpClient().SendMailAsync(message, cancellationToken);
+            await smtpClient.SendMailAsync(message, cancellationToken);
 
         }
         catch (Exception ex)
@@ -57,16 +70,5 @@ internal class MailManager
             logger.LogError(ex, "Error sending email");
         }
     }
-
-    SmtpClient CreateSmtpClient() =>
-    new()
-    {
-        Host = smtpHost,
-        Port = smtpPort,
-        EnableSsl = true,
-        DeliveryMethod = SmtpDeliveryMethod.Network,
-        UseDefaultCredentials = false,
-        Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-    };
 }
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Text;
 
 namespace VideoAnalyticsPipeline;
@@ -50,24 +51,16 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
     }
 
     private async ValueTask SendEmail(string camSerial, string camName, long timeStamp, string labels, string infMessage,
-        Stream image, CancellationToken cancellationToken)
+       Stream image, CancellationToken cancellationToken)
     {
-        var sendEmailTasks = (emails ?? []).Select(async toAddress =>
-        {
-            logger.LogInformation("Sending email to {toAddress}", toAddress);
-
-            var fromAddress = configuration["SMTP:Address"]!;
-            var displayName = configuration["SMTP:DisplayName"]!;
-            var mailSubject = string.Format(subject, camSerial, camName);
-            var mailBody = string.Format(body, camSerial, camName, DateTimeOffset.FromUnixTimeMilliseconds(timeStamp), labels, infMessage);
-            var attachmentName = $"{camSerial}_{timeStamp}.jpeg";
-            var mediaType = "image/jpeg";
-
-            await mailManager.SendMail(fromAddress, displayName, toAddress, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
-
-        });
-
-        await Task.WhenAll(sendEmailTasks);
-
+        var fromAddress = configuration["SMTP:Address"]!;
+        var displayName = configuration["SMTP:DisplayName"]!;
+        var mailSubject = string.Format(subject, camSerial, camName);
+        var mailBody = string.Format(body, camSerial, camName, DateTimeOffset.FromUnixTimeMilliseconds(timeStamp), labels, infMessage);
+        var attachmentName = $"{camSerial}_{timeStamp}.jpeg";
+        var mediaType = "image/jpeg";
+        var toAddresses = emails ?? Array.Empty<string>();
+        await mailManager.SendMail(fromAddress, displayName, toAddresses, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
+        logger.LogInformation("Sent email to {toAddresses}", string.Join(",",toAddresses));
     }
 }
