@@ -34,7 +34,7 @@ namespace VideoAnalyticsPipeline.Components
 
         private async Task UploadImageToBlobStorage(Image image, CancellationToken cancellationToken)
         {
-            var blobClient = blobServiceClient.GetBlobContainerClient(containerName).GetBlobClient($"{image.CameraSerial}_{image.Inference!.Timestamp}_{Guid.NewGuid()}.jpg");
+            var blobClient = blobServiceClient.GetBlobContainerClient(containerName).GetBlobClient($"{image.CameraSerial}_{image.Inference!.Timestamp}.jpg");
 
             image.ImageStream!.Position = 0;
 

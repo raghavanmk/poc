@@ -1,6 +1,10 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
+using Azure.Storage;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Azure.Storage.Blobs.Models;
 
 namespace VideoAnalyticsPipeline;
 internal class SQLLogger(
@@ -43,6 +47,7 @@ internal class SQLLogger(
                     {
                         var unixEpoch = data.Inference.Timestamp;
                         var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
+                        var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
 
                         // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
                         // location array sequence is [xmin, ymin, xmax, ymax]                        
@@ -52,7 +57,7 @@ internal class SQLLogger(
                             INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
                             BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, DetectionImageUrl, ModifiedBy, ModifiedDate)
                             VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
-                            null,'cedevops',GETDATE())
+                            {imageLink},'cedevops',GETDATE())
                         """;
 
                         using var command = new SqlCommand(insertQuery, sqlConnection);
@@ -66,5 +71,33 @@ internal class SQLLogger(
                 }
             }
         }
+    }
+
+    private string GenerateDetectionImageUrl(string cameraSerial, long unixEpoch)
+    {
+        var blobServiceClient = new BlobServiceClient(configuration["Blob:ConnectionString"]);
+        var containerClient = blobServiceClient.GetBlobContainerClient(configuration["Blob:ContainerName"]);
+
+        string blobItemName = $"{cameraSerial}_{unixEpoch}.jpg";
+
+        var blobClient = containerClient.GetBlobClient(blobItemName);
+
+        var sasBuilder = new BlobSasBuilder
+        {
+            BlobContainerName = containerClient.Name,
+            BlobName = blobClient.Name,
+            Resource = "b",
+            StartsOn = DateTimeOffset.UtcNow,
+            ExpiresOn = DateTimeOffset.UtcNow.AddYears(100),
+            Protocol = SasProtocol.Https
+        };
+
+        sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+        string sasToken = sasBuilder.ToSasQueryParameters(new StorageSharedKeyCredential(configuration["Blob:AccountName"], configuration["Blob:AccountKey"])).ToString();
+
+        var sasUrl = $"{blobClient.Uri}?{sasToken}";
+
+        return sasUrl; 
     }
 }
