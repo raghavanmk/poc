@@ -59,7 +59,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
         var mailBody = string.Format(body, camSerial, camName, DateTimeOffset.FromUnixTimeMilliseconds(timeStamp), labels, infMessage);
         var attachmentName = $"{camSerial}_{timeStamp}.jpeg";
         var mediaType = "image/jpeg";
-        var toAddresses = emails ?? Array.Empty<string>();
+        var toAddresses = emails ?? [];
         await mailManager.SendMail(fromAddress, displayName, toAddresses, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
         logger.LogInformation("Sent email to {toAddresses}", string.Join(",",toAddresses));
     }

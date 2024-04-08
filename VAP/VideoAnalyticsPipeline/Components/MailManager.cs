@@ -1,46 +1,20 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.Net;
+﻿using Microsoft.Extensions.Logging;
+using Polly;
 using System.Net.Mail;
 
 namespace VideoAnalyticsPipeline;
 
-internal class MailManager
+public class MailManager(ILogger<MailManager> logger, ISmtpClient smtpClientWrapper, IAsyncPolicy smtpRetryPolicy)
 {
-    private readonly SmtpClient smtpClient;
-    private readonly ILogger<MailManager> logger;
-    private readonly MailAddress fromAddress;
-    private readonly bool isBodyHtml;
+    private readonly bool isBodyHtml = true;
 
-    public MailManager(IConfiguration configuration, ILogger<MailManager> logger)
-    {
-        string fromPassword = configuration["SMTP:Password"]!;
-        string smtpHost = configuration["SMTP:Host"]!;
-        int smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
-
-        fromAddress = new MailAddress(configuration["SMTP:Address"]!, configuration["SMTP:DisplayName"]!);
-
-        smtpClient = new SmtpClient
-        {
-            Host = smtpHost,
-            Port = smtpPort,
-            EnableSsl = true,
-            DeliveryMethod = SmtpDeliveryMethod.Network,
-            UseDefaultCredentials = false,
-            Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-        };
-
-        isBodyHtml = true;
-        this.logger = logger;
-    }
-
-    internal async ValueTask SendMail(string fromAddress, string displayName, string[] toAddresses, string subject, string body,
-        Stream attachmentStream, string? attachmentName, string? mediaType, CancellationToken cancellationToken)
+    public async ValueTask SendMail(string fromAddress, string displayName, string[] toAddresses, string subject, string body,
+        Stream attachmentStream, string attachmentName, string mediaType, CancellationToken cancellationToken)
     {
         try
         {
             var from = new MailAddress(fromAddress, displayName);
-           
+
             using var message = new MailMessage
             {
                 From = from,
@@ -62,7 +36,9 @@ internal class MailManager
             var attachment = new Attachment(memoryStream, attachmentName, mediaType);
             message.Attachments.Add(attachment);
 
-            await smtpClient.SendMailAsync(message, cancellationToken);
+            await smtpRetryPolicy.ExecuteAsync(
+                async (cancellationToken) => await smtpClientWrapper.SendMailAsync(message, cancellationToken),
+                cancellationToken);
 
         }
         catch (Exception ex)

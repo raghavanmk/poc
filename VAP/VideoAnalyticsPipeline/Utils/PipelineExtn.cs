@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 using Serilog.Core;
+using System.Net;
+using System.Net.Mail;
 using VideoAnalyticsPipeline.Components;
 
 namespace VideoAnalyticsPipeline;
@@ -33,6 +35,25 @@ internal static class PipelineExtn
             services.AddSingleton<BlobStorage>();
             services.AddHostedService<PPEDetectorService>();
 
+            services.AddSingleton<ISmtpClient>(serviceProvider =>
+            {
+                var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+                string fromPassword = configuration["SMTP:Password"]!;
+                string smtpHost = configuration["SMTP:Host"]!;
+                int smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
+                string fromAddress = configuration["SMTP:Address"]!;
+
+                var smtpClient = new SmtpClient
+                {
+                    Host = smtpHost,
+                    Port = smtpPort,
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(fromAddress, fromPassword)
+                };
+                return new SmtpClientWrapper(smtpClient);
+            });
         }
         catch (Exception ex)
         {

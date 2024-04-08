@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
-using System.Reflection;
 using VideoAnalyticsPipeline.Components;
 
 namespace VideoAnalyticsPipeline.Tests;

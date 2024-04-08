@@ -38,5 +38,6 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
 
            services.AddPipelineComponents(logger, hostContext.Configuration);
            services.AddHttpClientPolicy(logger, hostContext.Configuration);
+           services.AddSmtpRetryPolicy(logger, hostContext.Configuration);
 
        });
