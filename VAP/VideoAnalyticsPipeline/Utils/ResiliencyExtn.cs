@@ -46,7 +46,7 @@ internal static class ResiliencyExtn
         return services;
     }
 
-    // calculate timeout based on retry count and interval.it follows arithmetic progression + buffer
+    // calculate timeout based on retry count and interval.it follows arithmetic progression + buffer added to complete last retry
     internal static int CalculateTimeout(int retryCount, int retryInterval, int bufferInterval = 0) =>
         (retryCount * (retryInterval * 2 + (retryCount - 1) * retryInterval)) / 2 + bufferInterval;
 

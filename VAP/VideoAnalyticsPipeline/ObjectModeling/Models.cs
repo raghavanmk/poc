@@ -18,7 +18,7 @@ public class Output
 {
     public int Class { get; set; }
     public int Id { get; set; }
-    // location values contain normalized coordinates of the bounding box. it follows [ymin, xmin, ymax, xmax] format
+    // location values contain normalized coordinates of the bounding box. it follows [xmin, ymin, xmax, ymax] format
     public float[]? Location { get; set; }
     public float Score { get; set; }
 }
@@ -51,7 +51,7 @@ public class ModelConfig
     {
         get
         {
-            if(Camera!.TryGetValue(cameraSerial, out var camera))
+            if (Camera!.TryGetValue(cameraSerial, out var camera))
                 return camera.Class!;
 
             return Camera!["Shared"].Class!;
@@ -125,7 +125,7 @@ public class CameraDetails
     public string? Location { get; set; }
 }
 
-public class  CameraFilter
+public class CameraFilter
 {
     public long Timeout { get; set; }
     public float RadiusLimit { get; set; }

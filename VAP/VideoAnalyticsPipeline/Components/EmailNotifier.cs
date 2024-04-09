@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Net;
 using System.Text;
 
 namespace VideoAnalyticsPipeline;
@@ -19,16 +18,18 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
             {
                 var image = (Image)data;
 
-                var cameraName = configuration[$"Camera:{image.CameraSerial}:Location"]!;
+                if (image == null)
+                {
+                    logger.LogError("Inferred image not available toAddress send toAddress for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
+                    continue;
+                }
 
                 var classes = data.Inference!.Outputs!.Select(x => x.Class);
 
                 var labels = GetLabels(classes);
 
-                if (image != null)
-                    await SendEmail(image.CameraSerial!, cameraName, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
-                else
-                    logger.LogError("Inferred image not available toAddress send toAddress for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
+                await SendEmail(image.CameraSerial!, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
+
             }
             catch (Exception ex)
             {
@@ -45,22 +46,32 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
         {
             labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);
         }
+
         labelsBuilder.Length -= 2;
         return labelsBuilder.ToString();
 
     }
 
-    private async ValueTask SendEmail(string camSerial, string camName, long timeStamp, string labels, string infMessage,
-       Stream image, CancellationToken cancellationToken)
+    private async ValueTask SendEmail(string camSerial, long timeStamp, string labels, string infMessage, Stream image, CancellationToken cancellationToken)
     {
+        var cameraName = configuration[$"Camera:{camSerial}:Location"]!;
+
         var fromAddress = configuration["SMTP:Address"]!;
+
         var displayName = configuration["SMTP:DisplayName"]!;
-        var mailSubject = string.Format(subject, camSerial, camName);
-        var mailBody = string.Format(body, camSerial, camName, DateTimeOffset.FromUnixTimeMilliseconds(timeStamp), labels, infMessage);
+
+        var mailSubject = string.Format(subject, camSerial, cameraName);
+
+        var mailBody = string.Format(body, camSerial, cameraName, DateTimeOffset.FromUnixTimeMilliseconds(timeStamp), labels, infMessage);
+
         var attachmentName = $"{camSerial}_{timeStamp}.jpeg";
+
         var mediaType = "image/jpeg";
+
         var toAddresses = emails ?? [];
+
         await mailManager.SendMail(fromAddress, displayName, toAddresses, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
-        logger.LogInformation("Sent email to {toAddresses}", string.Join(",",toAddresses));
+
+        logger.LogInformation("Sent email to {toAddresses}", string.Join(",", toAddresses));
     }
 }

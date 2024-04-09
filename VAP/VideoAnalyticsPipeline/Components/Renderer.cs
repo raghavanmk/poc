@@ -55,11 +55,12 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
                 canvas.DrawBitmap(originalImage, new SKPoint(0, 0));
 
                 foreach (var l in location)
-                {                       
+                {
                     logger.LogInformation("Drawing bounding box at {l} for violation detected at {timestamp}", l, timestamp);
 
                     // Convert the normalized coordinates to absolute pixel coordinates
-                    // location values contain normalized coordinates of the bounding box. it follows [ymin, xmin, ymax, xmax] format
+                    // location values contain normalized coordinates of the bounding box. it follows [xmin, ymin, xmax, ymax] format
+
                     var absXmin = (int)(l[0] * originalImage.Width);
                     var absXmax = (int)(l[2] * originalImage.Width);
                     var absYmin = (int)(l[1] * originalImage.Height);
