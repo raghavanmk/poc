@@ -13,6 +13,16 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
         return violations.Length > 0;
     }
 
+    internal bool CountCheck(Data data, out bool countCheck) 
+    {
+        var classInference = modelConfig.CountClasses(data.CameraSerial!);
+
+        var outputs = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o)).ToArray();
+
+        countCheck = inferenceFilter.IfCountIsNotCorrect(outputs, data.CameraSerial!, data.Inference.Timestamp);
+
+        return countCheck;
+    }
     private bool FilterInferences(Output output, Data data) =>
 
         inferenceFilter.IfCoordinatesNotOutOfBounds(output.Location!) &&
