@@ -82,19 +82,26 @@ public class TestDataGenerator
 
     public static IEnumerable<(string, long, Output[], bool)> GenerateTestDataFor_IfCountIsNotCorrect()
     {
+        // the count is correct, so it should return false
         yield return new("Q2UV-77ZC-7MVW", baseTime, [new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 0.75f }, new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
 
+        // time is diff, count is less, but not true as because there is cooling period it is false
         yield return new("Q2UV-77ZC-7MVW", baseTime + 20, [new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
 
+        // time is diff, count is less but still not true, cooling period not completed, so false
         yield return new("Q2UV-77ZC-7MVW", baseTime + 30, [new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
 
+        // count is less, cooling period exceeded, so it is true
         yield return new("Q2UV-77ZC-7MVW", baseTime + 1040, [ new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], true);
 
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 1050, [new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], true);
-
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 1040, [new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 0.75f }, new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
-
+        // count is less, again cooling period timer starts here, so it is false
         yield return new("Q2UV-77ZC-7MVW", baseTime + 1050, [new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
+
+        // count is correct, cooling period timer stops, so it is false
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 1060, [new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 0.75f }, new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
+
+        //  class is not correct, so false
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 100, [new Output { Class = 2, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
     }
 }
 

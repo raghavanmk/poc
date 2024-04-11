@@ -138,6 +138,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         if (timestamp - counter[cameraSerial]  > modelConfig.CountTimeout(cameraSerial))
         {
             logger.LogInformation("Count in {Camera} is less than the required count.", cameraSerial);
+            counter.TryRemove(cameraSerial, out var removedTimestamp); // Once alert is sent, again it takes cooling period time to send next alert
             return true;
         }
         
