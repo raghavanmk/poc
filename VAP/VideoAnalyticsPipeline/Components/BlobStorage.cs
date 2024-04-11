@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 
 namespace VideoAnalyticsPipeline.Components
@@ -13,17 +13,20 @@ namespace VideoAnalyticsPipeline.Components
         public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
         {
             var currentComponent = typeof(BlobStorage).FullName!;
+
             await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
             {
                 try
                 {
                     var image = (Image)data;
 
-                    if (image != null)
-                        await UploadImageToBlobStorage(image, cancellationToken);
-
-                    else
+                    if (image == null)
+                    {
                         logger.LogError("Inferred image not available to store in blob for {camSerial} at {timestamp}", data.CameraSerial, data.Inference!.Timestamp);
+                        continue;
+                    }
+
+                    await UploadImageToBlobStorage(image, cancellationToken);
                 }
                 catch (Exception ex)
                 {
