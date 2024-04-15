@@ -24,7 +24,7 @@ public class SmtpRetryTest
             .Build();
 
         // Act
-        ResiliencyExtn.AddSmtpRetryPolicy(services, logger, configuration);
+        ResiliencyPolicy.AddSmtpRetryPolicy(services, logger, configuration);
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();

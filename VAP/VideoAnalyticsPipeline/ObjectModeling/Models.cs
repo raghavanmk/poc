@@ -1,5 +1,4 @@
-﻿
-namespace VideoAnalyticsPipeline;
+﻿namespace VideoAnalyticsPipeline;
 
 public class Data
 {
@@ -35,7 +34,13 @@ public class ModelConfig
     public Dictionary<string, CameraDetails>? Camera { get; set; }
     public Dictionary<int, string>? LabelMap { get; set; }
     public Dictionary<string, CameraFilter>? CameraFilter { get; set; }
+    public Dictionary<string, string[]>? EmailAlertGroup { get; set; }
+    public Dictionary<string, string[]> Emails { get; private set; }
 
+    public ModelConfig()
+    {
+        Emails = [];
+    }
     public ModelInference this[int classId]
     {
         get
@@ -80,7 +85,29 @@ public class ModelConfig
 
         return CameraFilter!["Shared"].Timeout;
     }
+
+    public void ConfigEmailAlerts()
+    {
+        var adminEmails = EmailAlertGroup!["Admins"];
+        foreach (var camera in Camera!)
+        {
+            var emailAlertGroups = camera.Value.EmailAlertGroup ?? [];
+            var emails = new List<string>(adminEmails);
+
+            foreach (var emailAlertGroup in emailAlertGroups)
+            {
+                if (EmailAlertGroup!.TryGetValue(emailAlertGroup, out var emailList)
+                    && emailList is not null)
+                {
+                    emails.AddRange(emailList);
+                }
+            }
+
+            Emails[camera.Key] = emails.Distinct().ToArray();
+        }
+    }
 }
+
 
 public class PipelineComponentsConfig
 {
@@ -123,11 +150,11 @@ public class CameraDetails
 {
     public int[]? Class { get; set; }
     public string? Location { get; set; }
+    public string[]? EmailAlertGroup { get; set; }
 }
 
 public class CameraFilter
 {
     public long Timeout { get; set; }
     public float RadiusLimit { get; set; }
-
 }

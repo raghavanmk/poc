@@ -5,7 +5,7 @@ using Serilog.Core;
 using System.Net.Mail;
 
 namespace VideoAnalyticsPipeline;
-internal static class ResiliencyExtn
+internal static class ResiliencyPolicy
 {
     internal static IServiceCollection AddHttpClientPolicy(this IServiceCollection services, Logger logger, IConfiguration configuration)
     {

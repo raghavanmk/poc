@@ -14,22 +14,20 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
 
             try
             {
-                if (image != null)
+                if (image == null) continue;
+
+                var boundedBoxImg = await DrawBoundingBox(image.ImageStream!, data.Inference!.Timestamp,
+                                            data.Inference!.Outputs!.Select(o => o.Location)!,
+                                            cancellationToken);
+
+                if (boundedBoxImg == null) continue;
+
+                image.ImageStream = new MemoryStream();
+                boundedBoxImg.Encode(image.ImageStream, SKEncodedImageFormat.Jpeg, 100);
+
+                foreach (var writer in channelFactory.Writers(currentComponent))
                 {
-                    var boundedBoxImg = await DrawBoundingBox(image.ImageStream!, data.Inference!.Timestamp,
-                                                data.Inference!.Outputs!.Select(o => o.Location)!,
-                                                cancellationToken);
-
-                    if (boundedBoxImg != null)
-                    {
-                        image.ImageStream = new MemoryStream();
-                        boundedBoxImg.Encode(image.ImageStream, SKEncodedImageFormat.Jpeg, 100);
-
-                        foreach (var writer in channelFactory.Writers(currentComponent))
-                        {
-                            await writer.WriteAsync(image, cancellationToken);
-                        }
-                    }
+                    await writer.WriteAsync(image, cancellationToken);
                 }
             }
             catch (Exception ex)

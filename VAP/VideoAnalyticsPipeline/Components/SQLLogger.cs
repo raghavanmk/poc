@@ -1,10 +1,9 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure.Storage;
+using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
-using Azure.Storage;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Azure.Storage.Blobs.Models;
 
 namespace VideoAnalyticsPipeline;
 internal class SQLLogger(
@@ -33,46 +32,46 @@ internal class SQLLogger(
 
     internal async ValueTask LogSql(Data data, CancellationToken cancellationToken)
     {
-        if (data.ViolationDetected || configuration["Log:All"] == "true")
+        if (!data.ViolationDetected && configuration["Log:All"] != "true" || data.Inference!.Outputs == null)
+            return;
+
+        logger.LogInformation("Writing to SQL Server");
+
+        try
         {
-            if (data.Inference!.Outputs != null)
+            await sqlConnection.OpenAsync(cancellationToken);
+
+            foreach (var o in data.Inference.Outputs)
             {
-                logger.LogInformation("Writing to SQL Server");
+                var unixEpoch = data.Inference.Timestamp;
+                var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
 
-                try
-                {
-                    await sqlConnection.OpenAsync(cancellationToken);
+                // todo
+                // var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
 
-                    foreach (var o in data.Inference.Outputs)
-                    {
-                        var unixEpoch = data.Inference.Timestamp;
-                        var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
-                        var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
+                // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
+                // location array sequence is [xmin, ymin, xmax, ymax]                        
 
-                        // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
-                        // location array sequence is [xmin, ymin, xmax, ymax]                        
+                string insertQuery =
+               $"""
+                    INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
+                    BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, ModifiedBy, ModifiedDate)
+                    VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
+                    'cedevops',GETDATE())
+                """;
 
-                        string insertQuery =
-                       $"""
-                            INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
-                            BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, DetectionImageUrl, ModifiedBy, ModifiedDate)
-                            VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
-                            {imageLink},'cedevops',GETDATE())
-                        """;
+                using var command = new SqlCommand(insertQuery, sqlConnection);
 
-                        using var command = new SqlCommand(insertQuery, sqlConnection);
-
-                        await command.ExecuteNonQueryAsync(cancellationToken);
-                    }
-                }
-                finally
-                {
-                    await sqlConnection.CloseAsync();
-                }
+                await command.ExecuteNonQueryAsync(cancellationToken);
             }
+        }
+        finally
+        {
+            await sqlConnection.CloseAsync();
         }
     }
 
+    // todo
     private string GenerateDetectionImageUrl(string cameraSerial, long unixEpoch)
     {
         var blobServiceClient = new BlobServiceClient(configuration["Blob:ConnectionString"]);
@@ -98,6 +97,6 @@ internal class SQLLogger(
 
         var sasUrl = $"{blobClient.Uri}?{sasToken}";
 
-        return sasUrl; 
+        return sasUrl;
     }
 }

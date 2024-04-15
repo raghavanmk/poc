@@ -9,13 +9,15 @@ using System.Net.Mail;
 using VideoAnalyticsPipeline.Components;
 
 namespace VideoAnalyticsPipeline;
-internal static class PipelineExtn
+internal static class ConfigurePipelineServices
 {
     internal static IServiceCollection AddPipelineComponents(this IServiceCollection services, Logger logger, IConfiguration configuration)
     {
         try
         {
             var modelConfig = ParseModelConfigurations(configuration) ?? throw new Exception("Unable to parse model configurations");
+            modelConfig.ConfigEmailAlerts();
+
             var pipelineComponentsConfig = ParsePipelineConfig(configuration) ?? throw new Exception("Unable to parse pipeline configurations");
 
             services.AddSingleton(modelConfig);
@@ -37,10 +39,9 @@ internal static class PipelineExtn
 
             services.AddSingleton<ISmtpClient>(serviceProvider =>
             {
-                var configuration = serviceProvider.GetRequiredService<IConfiguration>();
                 string fromPassword = configuration["SMTP:Password"]!;
                 string smtpHost = configuration["SMTP:Host"]!;
-                int smtpPort = Convert.ToInt16(configuration["Notification:Port"]);
+                int smtpPort = Convert.ToInt16(configuration["SMTP:Port"]);
                 string fromAddress = configuration["SMTP:Address"]!;
 
                 var smtpClient = new SmtpClient
@@ -66,14 +67,25 @@ internal static class PipelineExtn
         return services;
     }
 
-    private static ModelConfig? ParseModelConfigurations(IConfiguration configuration) =>
-    new()
+    private static ModelConfig? ParseModelConfigurations(IConfiguration configuration)
     {
-        ModelInference = configuration.GetSection("ModelInference").Get<Dictionary<string, ModelInference>>(),
-        Camera = configuration.GetSection("Camera").Get<Dictionary<string, CameraDetails>>(),
-        CameraFilter = configuration.GetSection("CameraFilter").Get<Dictionary<string, CameraFilter>>(),
-        LabelMap = configuration.GetSection("LabelMap").Get<Dictionary<string, string>>()?.ToDictionary(kvp => int.Parse(kvp.Key), kvp => kvp.Value)
-    };
+        var emailAlertGroupSection = configuration.GetSection("EmailAlertGroup");
+        var emailAlertGroup = new Dictionary<string, string[]>();
+
+        foreach (var child in emailAlertGroupSection.GetChildren())
+        {
+            emailAlertGroup[child.Key] = child.Get<string[]>() ?? [];
+        }
+
+        return new ModelConfig
+        {
+            ModelInference = configuration.GetSection("ModelInference").Get<Dictionary<string, ModelInference>>(),
+            EmailAlertGroup = emailAlertGroup,
+            Camera = configuration.GetSection("Camera").Get<Dictionary<string, CameraDetails>>(),
+            CameraFilter = configuration.GetSection("CameraFilter").Get<Dictionary<string, CameraFilter>>(),
+            LabelMap = configuration.GetSection("LabelMap").Get<Dictionary<string, string>>()?.ToDictionary(kvp => int.Parse(kvp.Key), kvp => kvp.Value)
+        };
+    }
 
     private static PipelineComponentsConfig? ParsePipelineConfig(IConfiguration configuration) =>
     new()

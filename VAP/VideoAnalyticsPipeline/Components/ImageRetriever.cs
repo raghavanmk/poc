@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace VideoAnalyticsPipeline;
 
@@ -11,18 +11,17 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
 
         await foreach (var data in channelFactory.Reader(currentComponent).ReadAllAsync(cancellationToken))
         {
-            if (!data.ViolationDetected) continue;
-
             try
             {
+                if (!data.ViolationDetected) continue;
+
                 var image = await DownloadSnapshot(data, cancellationToken);
 
-                if (image != null)
+                if (image == null) continue;
+
+                foreach (var channel in channelFactory.Writers(currentComponent))
                 {
-                    foreach (var channel in channelFactory.Writers(currentComponent))
-                    {
-                        await channel.WriteAsync(image, cancellationToken);
-                    }
+                    await channel.WriteAsync(image, cancellationToken);
                 }
             }
             catch (Exception ex)

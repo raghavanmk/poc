@@ -3,11 +3,10 @@ using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace VideoAnalyticsPipeline;
-internal class EmailNotifier(IConfiguration configuration, ChannelFactory channelFactory, MailManager mailManager, ILogger<EmailNotifier> logger) : IModule
+internal class EmailNotifier(IConfiguration configuration, ChannelFactory channelFactory, MailManager mailManager, ILogger<EmailNotifier> logger, ModelConfig modelConfig) : IModule
 {
-    private readonly string[]? emails = configuration.GetSection("Notification:Email").Get<string[]>();
-    private readonly string subject = configuration["Notification:Subject"] ?? "Violation Detected";
-    private readonly string body = configuration["Notification:Message"] ?? "Violation Detected";
+    private readonly string subject = configuration["Email:Subject"] ?? "Violation Detected";
+    private readonly string body = configuration["Email:Message"] ?? "Violation Detected";
     public async ValueTask ExecuteAsync(CancellationToken cancellationToken)
     {
         var currentComponent = typeof(EmailNotifier).FullName!;
@@ -16,6 +15,14 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
         {
             try
             {
+                var emails = modelConfig.Emails![data.CameraSerial!];
+
+                if (emails == null || emails.Length == 0)
+                {
+                    logger.LogWarning("Emails not configured for {camSerial}", data.CameraSerial);
+                    continue;
+                }
+
                 var image = (Image)data;
 
                 if (image == null)
@@ -28,7 +35,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
                 var labels = GetLabels(classes);
 
-                await SendEmail(image.CameraSerial!, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
+                await SendEmail(image.CameraSerial!, emails, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
 
             }
             catch (Exception ex)
@@ -52,7 +59,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
     }
 
-    private async ValueTask SendEmail(string camSerial, long timeStamp, string labels, string infMessage, Stream image, CancellationToken cancellationToken)
+    private async ValueTask SendEmail(string camSerial, string[]? emails, long timeStamp, string labels, string infMessage, Stream image, CancellationToken cancellationToken)
     {
         var cameraName = configuration[$"Camera:{camSerial}:Location"]!;
 
