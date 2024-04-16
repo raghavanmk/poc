@@ -46,6 +46,11 @@ public class InferenceRuleTests
                     Deferred = true
                 }
             },
+            CameraRule = new Dictionary<string, string[]>
+            { 
+                ["Shared"] = ["Threshold"] ,
+                ["Q2UV-77ZC-7MVW"] = [ "Threshold", "ConfinedSpace" ]
+            },
             CameraFilter = new Dictionary<string, CameraFilter>
             {
                 ["Shared"] = new CameraFilter
