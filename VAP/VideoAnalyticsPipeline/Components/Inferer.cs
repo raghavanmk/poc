@@ -11,11 +11,17 @@ internal class Inferer(ChannelFactory channelFactory, ILogger<Inferer> logger, I
         {
             try
             {
-                if (!infererRules.TryDetectViolation(data, out var violations)) continue;
+                bool confinedSpace = false;
+                if (!infererRules.TryDetectViolation(data, out var violations))
+                {
+                    if(data.ConfinedSpace) confinedSpace = data.ConfinedSpace;
+                    else continue;
+                }
 
                 logger.LogInformation("Violation detected in message {message}, inferred from camera {camSerial} at {timestamp}", data.Inference!.ToString(), data.CameraSerial, data.Inference!.Timestamp);
                 data.ViolationDetected = true;
                 data.Inference!.Outputs = violations;
+                data.ConfinedSpace = confinedSpace;
 
                 foreach (var writer in channelFactory.Writers(currentComponent))
                 {

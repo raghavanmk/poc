@@ -60,7 +60,8 @@ internal class ImageRetriever(ChannelFactory channelFactory, ILogger<ImageRetrie
             CameraSerial = data.CameraSerial,
             ImageStream = imageStream,
             Inference = data.Inference,
-            ViolationDetected = data.ViolationDetected
+            ViolationDetected = data.ViolationDetected,
+            ConfinedSpace = data.ConfinedSpace
         };
 
         return image;

@@ -12,13 +12,10 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
 
         violations = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o) &&
                                                          FilterInferences(o, data)).ToArray() ?? [];
+        
+        if (cameraRules.Contains("ConfinedSpace"))   data.ConfinedSpace = CountCheck(data);
 
-        if (cameraRules.Contains("ConfinedSpace"))
-        {
-            CountCheck(data);
-        }
-
-        return violations.Length > 0 ;
+        return violations.Length > 0;
     }
 
     private bool FilterInferences(Output output, Data data) =>

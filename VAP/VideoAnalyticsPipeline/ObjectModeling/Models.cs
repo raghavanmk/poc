@@ -5,6 +5,7 @@ public class Data
     public Inference? Inference { get; set; }
     public bool ViolationDetected { get; set; }
     public string? CameraSerial { get; set; }
+    public bool ConfinedSpace { get; set; }
 }
 public class Inference
 {

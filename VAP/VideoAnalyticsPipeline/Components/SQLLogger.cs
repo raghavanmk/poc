@@ -32,7 +32,7 @@ internal class SQLLogger(
 
     internal async ValueTask LogSql(Data data, CancellationToken cancellationToken)
     {
-        if (!data.ViolationDetected && configuration["Log:All"] != "true" || data.Inference!.Outputs == null)
+        if (!data.ViolationDetected && configuration["Log:All"] != "true") /*|| data.Inference!.Outputs == null)*/
             return;
 
         logger.LogInformation("Writing to SQL Server");
@@ -41,28 +41,35 @@ internal class SQLLogger(
         {
             await sqlConnection.OpenAsync(cancellationToken);
 
-            foreach (var o in data.Inference.Outputs)
+            if (data.Inference!.Outputs.Length == 0 && data.ConfinedSpace == true)
             {
-                var unixEpoch = data.Inference.Timestamp;
-                var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
+                
+            }
+            else
+            {
+                foreach (var o in data.Inference.Outputs!)
+                {
+                    var unixEpoch = data.Inference.Timestamp;
+                    var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
 
-                // todo
-                // var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
+                    // todo
+                    // var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
 
-                // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
-                // location array sequence is [xmin, ymin, xmax, ymax]                        
+                    // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
+                    // location array sequence is [xmin, ymin, xmax, ymax]                        
 
-                string insertQuery =
-               $"""
+                    string insertQuery =
+                   $"""
                     INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
                     BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, ModifiedBy, ModifiedDate)
                     VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
                     'cedevops',GETDATE())
                 """;
 
-                using var command = new SqlCommand(insertQuery, sqlConnection);
+                    using var command = new SqlCommand(insertQuery, sqlConnection);
 
-                await command.ExecuteNonQueryAsync(cancellationToken);
+                    await command.ExecuteNonQueryAsync(cancellationToken);
+                }
             }
         }
         finally
