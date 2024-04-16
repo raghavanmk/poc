@@ -41,36 +41,31 @@ internal class SQLLogger(
         {
             await sqlConnection.OpenAsync(cancellationToken);
 
-            if (data.Inference!.Outputs.Length == 0 && data.ConfinedSpace == true)
+            foreach (var o in data.Inference.Outputs!)
             {
-                
+                var unixEpoch = data.Inference.Timestamp;
+                var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
+                var confinedSpace = data.ConfinedSpace ? 1 : 0;
+
+                // todo
+                // var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
+
+                // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
+                // location array sequence is [xmin, ymin, xmax, ymax]                        
+
+                string insertQuery =
+                $"""
+                INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
+                BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, ModifiedBy, ModifiedDate, ConfinedSpace)
+                VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
+                'cedevops',GETDATE(),{confinedSpace})
+            """;
+
+                using var command = new SqlCommand(insertQuery, sqlConnection);
+
+                await command.ExecuteNonQueryAsync(cancellationToken);
             }
-            else
-            {
-                foreach (var o in data.Inference.Outputs!)
-                {
-                    var unixEpoch = data.Inference.Timestamp;
-                    var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
-
-                    // todo
-                    // var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
-
-                    // bbleft = xmin, bbright = xmax, bbtop = ymin, bbbottom = ymax
-                    // location array sequence is [xmin, ymin, xmax, ymax]                        
-
-                    string insertQuery =
-                   $"""
-                    INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
-                    BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, ModifiedBy, ModifiedDate)
-                    VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
-                    'cedevops',GETDATE())
-                """;
-
-                    using var command = new SqlCommand(insertQuery, sqlConnection);
-
-                    await command.ExecuteNonQueryAsync(cancellationToken);
-                }
-            }
+            
         }
         finally
         {

@@ -34,9 +34,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
                 var classes = data.Inference!.Outputs.Select(x => x.Class);
 
-                var labels = classes.Count() != 0 ? GetLabels(classes) : "";
-
-                if (data.ConfinedSpace) labels += "ConfinedSpace";
+                var labels = GetLabels(classes, data.ConfinedSpace);
 
                 await SendEmail(image.CameraSerial!, emails, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
 
@@ -48,7 +46,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
         }
     }
 
-    private string GetLabels(IEnumerable<int> classes)
+    private string GetLabels(IEnumerable<int> classes, bool confinedSpace)
     {
         var labelsBuilder = new StringBuilder();
 
@@ -56,6 +54,8 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
         {
             labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);
         }
+
+        if (confinedSpace) labelsBuilder.AppendLine("ConfinedSpace");
 
         labelsBuilder.Length -= 2;
         return labelsBuilder.ToString();
@@ -78,11 +78,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
         var mediaType = "image/jpeg";
 
-        emails = ["sahaja.belaganti@nexturn.com"];
-
-
         var toAddresses = emails ?? [];
-
 
         await mailManager.SendMail(fromAddress, displayName, toAddresses, mailSubject, mailBody, image, attachmentName, mediaType, cancellationToken);
 
