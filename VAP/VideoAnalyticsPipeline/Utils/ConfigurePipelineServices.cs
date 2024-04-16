@@ -83,7 +83,8 @@ internal static class ConfigurePipelineServices
             EmailAlertGroup = emailAlertGroup,
             Camera = configuration.GetSection("Camera").Get<Dictionary<string, CameraDetails>>(),
             CameraFilter = configuration.GetSection("CameraFilter").Get<Dictionary<string, CameraFilter>>(),
-            LabelMap = configuration.GetSection("LabelMap").Get<Dictionary<string, string>>()?.ToDictionary(kvp => int.Parse(kvp.Key), kvp => kvp.Value)
+            LabelMap = configuration.GetSection("LabelMap").Get<Dictionary<string, string>>()?.ToDictionary(kvp => int.Parse(kvp.Key), kvp => kvp.Value),
+            CameraRule = configuration.GetSection("CameraRule").Get<Dictionary<string, string[]>>()
         };
     }
 

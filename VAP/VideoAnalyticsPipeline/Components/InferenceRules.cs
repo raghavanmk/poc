@@ -8,10 +8,15 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
     {
         var classInference = modelConfig[data.CameraSerial!];
 
+        var cameraRules = modelConfig.CameraRules(data.CameraSerial!);
+
         violations = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o) &&
                                                          FilterInferences(o, data)).ToArray() ?? [];
 
-        CountCheck(data);
+        if (cameraRules.Contains("ConfinedSpace"))
+        {
+            CountCheck(data);
+        }
 
         return violations.Length > 0 ;
     }

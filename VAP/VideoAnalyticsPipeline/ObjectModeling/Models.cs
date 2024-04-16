@@ -36,6 +36,8 @@ public class ModelConfig
     public Dictionary<string, CameraFilter>? CameraFilter { get; set; }
     public Dictionary<string, string[]>? EmailAlertGroup { get; set; }
     public Dictionary<string, string[]> Emails { get; private set; }
+    public Dictionary<string, string[]> CameraRule { get; set; }
+
 
     public ModelConfig()
     {
@@ -127,6 +129,14 @@ public class ModelConfig
             return cameraFilter.Count;
 
         return CameraFilter!["Shared"].Count;
+    }
+
+    public string[] CameraRules(string cameraSerial)
+    {
+        if (CameraRule!.TryGetValue(cameraSerial, out var cameraRule))
+            return cameraRule;
+
+        return CameraRule!["Shared"];
     }
 }
 
