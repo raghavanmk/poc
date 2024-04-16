@@ -10,7 +10,10 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
 
         violations = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o) &&
                                                          FilterInferences(o, data)).ToArray() ?? [];
-        return violations.Length > 0;
+
+        CountCheck(data);
+
+        return violations.Length > 0 ;
     }
 
     private bool FilterInferences(Output output, Data data) =>
@@ -24,4 +27,14 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
         classInference!.Contains(output.Class) &&
                output.Score > modelConfig.ModelConfidence(output.Class);
 
+    internal bool CountCheck(Data data)
+    {
+        var classInference = modelConfig.CountClasses(data.CameraSerial!);
+
+        var outputs = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o)).ToArray();
+
+        var countCheck = inferenceFilter.IfCountIsNotCorrect(outputs, data.CameraSerial!, data.Inference.Timestamp);
+
+        return countCheck;
+    }
 }

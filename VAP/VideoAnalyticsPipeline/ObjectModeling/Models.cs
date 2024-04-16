@@ -106,6 +106,28 @@ public class ModelConfig
             Emails[camera.Key] = emails.Distinct().ToArray();
         }
     }
+    public int[] CountClasses(string cameraSerial)
+    {
+        if (Camera!.TryGetValue(cameraSerial, out var camera))
+            return camera.CountClass!;
+
+        return Camera!["Shared"].Class!;
+    }
+    public long? CountTimeout(string cameraSerial)
+    {
+        if (CameraFilter!.TryGetValue(cameraSerial, out var cameraFilter))
+            return cameraFilter.CountTimeout;
+
+        return CameraFilter!["Shared"].CountTimeout;
+    }
+
+    public int? Count(string cameraSerial)
+    {
+        if (CameraFilter!.TryGetValue(cameraSerial, out var cameraFilter))
+            return cameraFilter.Count;
+
+        return CameraFilter!["Shared"].Count;
+    }
 }
 
 
@@ -151,10 +173,14 @@ public class CameraDetails
     public int[]? Class { get; set; }
     public string? Location { get; set; }
     public string[]? EmailAlertGroup { get; set; }
+    public int[]? CountClass { get; set; }
+
 }
 
 public class CameraFilter
 {
     public long Timeout { get; set; }
     public float RadiusLimit { get; set; }
+    public long? CountTimeout { get; set; }
+    public int? Count { get; set; }
 }

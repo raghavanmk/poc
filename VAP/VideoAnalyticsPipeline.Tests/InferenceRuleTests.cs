@@ -31,7 +31,7 @@ public class InferenceRuleTests
                 ["Q2UV-5LPF-HURS"] = new CameraDetails { Location = "Depack Front Door CMB", Class = [1, 3] },
                 ["Q2UV-QYDA-Z3CF"] = new CameraDetails { Location = "Rail Dock East", Class = [1, 3] },
                 ["Q2UV-9LPF-KURS"] = new CameraDetails { Location = "Dummyy", Class = [1, 3] },
-
+                ["Q2UV-77ZC-7MVW"] = new CameraDetails { Location = "Pharma Cage", Class = [1, 3], CountClass = [0, 1] },
             },
             ModelInference = new Dictionary<string, ModelInference>
             {
@@ -72,6 +72,13 @@ public class InferenceRuleTests
                 {
                     Timeout = 1000,
                     RadiusLimit = 0.3f
+                },
+                ["Q2UV-77ZC-7MVW"] = new CameraFilter
+                {
+                    Timeout = 1000,
+                    RadiusLimit = 0.3f,
+                    Count = 2,
+                    CountTimeout = 1000,
                 }
             }
         };
@@ -114,6 +121,20 @@ public class InferenceRuleTests
         {
             //Act
             var result = inferenceFilter.IfCoordinatesNotNeighbours(output, cameraSerial, timestamp);
+
+            //Assert
+            Assert.Equal(expected, result);
+        }
+    }
+
+
+    [Fact]
+    public void IfCountIsNotCorrect_TestAllConditions()
+    {
+        foreach (var (cameraSerial, timestamp, outputs, expected) in TestDataGenerator.GenerateTestDataFor_IfCountIsNotCorrect())
+        {
+            //Act
+            var result = inferenceFilter.IfCountIsNotCorrect(outputs, cameraSerial, timestamp);
 
             //Assert
             Assert.Equal(expected, result);

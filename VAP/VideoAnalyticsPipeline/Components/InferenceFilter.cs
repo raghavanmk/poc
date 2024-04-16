@@ -3,6 +3,7 @@ using KdTree;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using System.Diagnostics.Metrics;
 
 namespace VideoAnalyticsPipeline.Components;
 internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter> logger)
@@ -14,6 +15,8 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
     // In this kdTree dictionary we store one kdtree for each class in a camera(key)
     private readonly ConcurrentDictionary<string, KdTree<float, Detection>> kdTree = [];
     private readonly ConcurrentDictionary<string, long> processedCoordinates = [];
+    private readonly ConcurrentDictionary<string, long> counter = [];
+
 
     internal bool IfCoordinatesNotOutOfBounds(float[] coordinates)
     {
@@ -114,6 +117,34 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         return true;
     }
 
+    internal bool IfCountIsNotCorrect(Output[] outputs, string cameraSerial, long timestamp)
+    {
+        // Check the count, if it is ok, we will return false
+        // If it is not ok, we will try to see if there are any previous inference like this -
+        // If the inference is not present in counter dict, we will add the current timestamp to the dict and we will not send the alert and return false (because we are having a cooling period)
+        // If the inference is present in counter dict we will check the cachedtimestamp and curr. timestamp difference, if it  is greater than cooling period, we will generate an alert
+        // Every time, if the output count is >= required count we will remove the camera in counter.
+
+        if (outputs.Length >= modelConfig.Count(cameraSerial))
+        {
+            counter.TryRemove(cameraSerial, out var removedTimestamp);
+            return false;
+        }
+
+        if (!counter.TryGetValue(cameraSerial, out var cachedTimestamp))
+        {
+            counter[cameraSerial] = timestamp;
+            return false;
+        }
+
+        if (timestamp - counter[cameraSerial] > modelConfig.CountTimeout(cameraSerial))
+        {
+            logger.LogInformation("Count in {Camera} is less than the required count {Count}", cameraSerial, modelConfig.Count(cameraSerial));
+            return true;
+        }
+
+        return false;
+    }
     internal string GenerateKey(float[] coordinates, string camSerial, int classId, float confidence)
     {
         var confidenceRange = confidence < modelConfig.ModelConfidence(classId) ? "low" : "high";
