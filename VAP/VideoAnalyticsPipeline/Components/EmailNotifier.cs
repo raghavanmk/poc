@@ -34,7 +34,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
 
                 var classes = data.Inference!.Outputs!.Select(x => x.Class);
 
-                var labels = GetLabels(classes, data.ConfinedSpace);
+                var labels = GetLabels(classes);
 
                 await SendEmail(image.CameraSerial!, emails, image.Inference!.Timestamp, labels, data.Inference!.ToString(), image.ImageStream!, cancellationToken);
 
@@ -46,17 +46,13 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
         }
     }
 
-    private string GetLabels(IEnumerable<int> classes, bool confinedSpace)
+    private string GetLabels(IEnumerable<int> classes)
     {
         var labelsBuilder = new StringBuilder();
 
-        if (confinedSpace) labelsBuilder.AppendLine("ConfinedSpace");
-        else
+        foreach (var cls in classes.Distinct())
         {
-            foreach (var cls in classes.Distinct())
-            {
-                labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);
-            }
+            labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);
         }
 
         return labelsBuilder.ToString();

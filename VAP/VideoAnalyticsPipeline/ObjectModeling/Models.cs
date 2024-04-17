@@ -43,6 +43,7 @@ public class ModelConfig
     public ModelConfig()
     {
         Emails = [];
+        CameraRule = [];
     }
     public ModelInference this[int classId]
     {

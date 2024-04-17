@@ -16,14 +16,18 @@ internal class Renderer(ChannelFactory channelFactory, ILogger<Renderer> logger)
             {
                 if (image == null) continue;
 
-                var boundedBoxImg = await DrawBoundingBox(image.ImageStream!, data.Inference!.Timestamp,
-                                            data.Inference!.Outputs!.Select(o => o.Location)!,
-                                            cancellationToken);
+                if (!data.ConfinedSpace)
+                {
 
-                if (boundedBoxImg == null) continue;
+                    var boundedBoxImg = await DrawBoundingBox(image.ImageStream!, data.Inference!.Timestamp,
+                                                data.Inference!.Outputs!.Select(o => o.Location)!,
+                                                cancellationToken);
 
-                image.ImageStream = new MemoryStream();
-                boundedBoxImg.Encode(image.ImageStream, SKEncodedImageFormat.Jpeg, 100);
+                    if (boundedBoxImg == null) continue;
+
+                    image.ImageStream = new MemoryStream();
+                    boundedBoxImg.Encode(image.ImageStream, SKEncodedImageFormat.Jpeg, 100);
+                }
                 
 
                 foreach (var writer in channelFactory.Writers(currentComponent))

@@ -134,12 +134,12 @@ public class InferenceRuleTests
 
 
     [Fact]
-    public void IfCountIsNotCorrect_TestAllConditions()
+    public void IfCoordinatesForConfinedSpaceIsProcessed_TestAllConditions()
     {
-        foreach (var (cameraSerial, timestamp, outputs, expected) in TestDataGenerator.GenerateTestDataFor_IfCountIsNotCorrect())
+        foreach (var (cameraSerial, timestamp, expected) in TestDataGenerator.GenerateTestDataFor_IfCoordinatesForConfinedSpaceIsProcessed())
         {
             //Act
-            var result = inferenceFilter.IfCountIsNotCorrect(outputs, cameraSerial, timestamp);
+            var result = inferenceFilter.IfCoordinatesForConfinedSpaceIsProcessed(cameraSerial, timestamp);
 
             //Assert
             Assert.Equal(expected, result);

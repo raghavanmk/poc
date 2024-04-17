@@ -4,7 +4,8 @@ namespace VideoAnalyticsPipeline;
 
 internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inferenceFilter)
 {
-    internal bool TryDetectViolation(Data data, out Output[] violations, out bool confinedSpace)
+    // todo refactor
+    internal bool TryDetectViolation(Data data, out Output[] violations)
     {
         var classInference = modelConfig[data.CameraSerial!];
 
@@ -12,13 +13,19 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
 
         if(cameraRules.Contains("ConfinedSpace"))
         {
-            confinedSpace = CountCheck(data, out Output[] outputs);
+            var confinedSpace = CountCheck(data, data.Inference!.Outputs!);
 
-            violations = confinedSpace ? outputs : data.Inference?.Outputs?.Where(o => IfInferenceOutsideThreshold(classInference, o) && FilterInferences(o, data)).ToArray() ?? [];
+            if(confinedSpace)
+            {
+                data.ConfinedSpace = true;
+                violations = data.Inference!.Outputs!;
+                return true;
+            }
+
+            violations = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o) && FilterInferences(o, data)).ToArray() ?? [];
         }
         else
-        {
-            confinedSpace = false;
+        {            
             violations = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o) &&
                                                          FilterInferences(o, data)).ToArray() ?? [];
         }
@@ -37,14 +44,19 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
         classInference!.Contains(output.Class) &&
                output.Score > modelConfig.ModelConfidence(output.Class);
 
-    internal bool CountCheck(Data data, out Output[] outputs)
+    internal bool CountCheck(Data data, Output[] outputs)
     {
-        var classInference = modelConfig.CountClasses(data.CameraSerial!);
+        if (outputs.Length < modelConfig.Count(data.CameraSerial!))
+        {
+            var isProcessed = inferenceFilter.IfCoordinatesForConfinedSpaceIsProcessed(data.CameraSerial!, data.Inference!.Timestamp);
 
-        outputs = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o)).ToArray();
+            foreach (var output in outputs)
+            {
+                output.Class = 50;
+            }
+            return isProcessed;
+        }       
 
-        var countCheck = inferenceFilter.IfCountIsNotCorrect(outputs, data.CameraSerial!, data.Inference.Timestamp);
-
-        return countCheck;
+        return false;
     }
 }

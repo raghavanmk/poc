@@ -45,7 +45,7 @@ internal class SQLLogger(
             {
                 var unixEpoch = data.Inference.Timestamp;
                 var dateTime = DateTimeOffset.FromUnixTimeMilliseconds(unixEpoch);
-                var confinedSpace = data.ConfinedSpace ? 1 : 0;
+                var minimumPeopleCount = data.ConfinedSpace ? 1 : 0;
 
                 // todo
                 // var imageLink = GenerateDetectionImageUrl(data.CameraSerial!, unixEpoch);
@@ -56,9 +56,9 @@ internal class SQLLogger(
                 string insertQuery =
                 $"""
                 INSERT INTO {configuration["Log:Table"]} (CameraSerial,Class,DetectionId,DetectionThreshold,BoundingBoxRight,
-                BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, ModifiedBy, ModifiedDate, ConfinedSpace)
+                BoundingBoxLeft,BoundingBoxTop,BoundingBoxBottom,DetectionUnixEpoch,DetectionDateTime, ModifiedBy, ModifiedDate, MinimumPeopleCount)
                 VALUES ('{data.CameraSerial}',{o.Class},{o.Id},{o.Score},{o.Location![2]},{o.Location[0]},{o.Location[1]},{o.Location[3]},{unixEpoch},'{dateTime}',
-                'cedevops',GETDATE(),{confinedSpace})
+                'cedevops',GETDATE(),{minimumPeopleCount})
             """;
 
                 using var command = new SqlCommand(insertQuery, sqlConnection);

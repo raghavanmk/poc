@@ -80,21 +80,21 @@ public class TestDataGenerator
         yield return new("Q2UV-9LPF-KURS", new Output { Class = 1, Id = 6, Location = [0.46f, 0.23f, 0.68f, 0.51f], Score = 0.75f }, baseTime + 3040, true);
     }
 
-    public static IEnumerable<(string, long, Output[], bool)> GenerateTestDataFor_IfCountIsNotCorrect()
+    public static IEnumerable<(string, long, bool)> GenerateTestDataFor_IfCoordinatesForConfinedSpaceIsProcessed()
     {
-        yield return new("Q2UV-77ZC-7MVW", baseTime, [new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 0.75f }, new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
+        yield return new("Q2UV-77ZC-7MVW", baseTime, false);
 
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 20, [new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 20, false);
 
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 30, [new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 30, false);
 
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 1040, [new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], true);
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 1040, true);
 
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 1050, [new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], true);
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 1050, false);
 
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 1040, [new Output { Class = 1, Id = 1, Location = [0.24f, 0.12f, 0.46f, 0.31f], Score = 0.75f }, new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 2040, false);
 
-        yield return new("Q2UV-77ZC-7MVW", baseTime + 1050, [new Output { Class = 0, Id = 1, Location = [0.34f, 0.12f, 0.46f, 0.31f], Score = 0.75f }], false);
+        yield return new("Q2UV-77ZC-7MVW", baseTime + 2060, true);
     }
 }
 
