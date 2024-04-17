@@ -37,7 +37,7 @@ public class ModelConfig
     public Dictionary<string, CameraFilter>? CameraFilter { get; set; }
     public Dictionary<string, string[]>? EmailAlertGroup { get; set; }
     public Dictionary<string, string[]> Emails { get; private set; }
-    public Dictionary<string, string[]> CameraRule { get; set; }
+    public Dictionary<string, string[]>? CameraRule { get; set; }
 
 
     public ModelConfig()

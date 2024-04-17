@@ -1,9 +1,8 @@
-﻿using KdTree.Math;
-using KdTree;
-using System.Collections.Concurrent;
+﻿using KdTree;
+using KdTree.Math;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Text;
-using System.Diagnostics.Metrics;
 
 namespace VideoAnalyticsPipeline.Components;
 internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter> logger)
@@ -61,7 +60,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
             if (processedCoordinates.TryAdd(key, timeStamp))
             {
                 logger.LogInformation("Key {key} added to cache", key);
-                if(modelInference.Deferred)
+                if (modelInference.Deferred)
                 {
                     logger.LogInformation("Coordinates {coordinates} for camera {cameraSerial} for class {classId} with confidence {confidence} has deferred flag set. Processing for violations will happen once it has crossed timeout threshold.", coordinates, cameraSerial, classId, confidence);
                     return false;
@@ -112,7 +111,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
 
         tree.Add(midPoint, detection);
 
-        logger.LogInformation("Coordinates {coordinates} are not neighbours to already processed and are added to KD Tree", output.Location);    
+        logger.LogInformation("Coordinates {coordinates} are not neighbours to already processed and are added to KD Tree", output.Location);
 
         return true;
     }
@@ -123,15 +122,16 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
         // If the inference is present in confinedSpaceProcessedCoordinates dict we will check the cachedtimestamp and curr. timestamp difference, if it is greater than cooling period, we will generate an alert
         // Every time, if the output count is >= required count we will remove the camera in counter.
 
-        if (!confinedSpaceProcessedCoordinates.ContainsKey(cameraSerial))
+        if (!confinedSpaceProcessedCoordinates.TryGetValue(cameraSerial, out long value))
         {
-            confinedSpaceProcessedCoordinates[cameraSerial] = timestamp;
+            value = timestamp;
+            confinedSpaceProcessedCoordinates[cameraSerial] = value;
             return false;
         }
 
-        if (timestamp - confinedSpaceProcessedCoordinates[cameraSerial] > modelConfig.CountTimeout(cameraSerial))
+        if (timestamp - value > modelConfig.CountTimeout(cameraSerial))
         {
-            confinedSpaceProcessedCoordinates.TryRemove(cameraSerial, out timestamp);
+            confinedSpaceProcessedCoordinates.TryRemove(cameraSerial, out _);
             logger.LogInformation("Minimum number of People Count in {Camera} is less than the required count - {Count}", cameraSerial, modelConfig.Count(cameraSerial));
             return true;
         }
