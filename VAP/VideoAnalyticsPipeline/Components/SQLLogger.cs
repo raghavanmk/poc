@@ -32,7 +32,7 @@ internal class SQLLogger(
 
     internal async ValueTask LogSql(Data data, CancellationToken cancellationToken)
     {
-        if (!data.ViolationDetected && configuration["Log:All"] != "true") /*|| data.Inference!.Outputs == null)*/
+        if (!data.ViolationDetected && configuration["Log:All"] != "true" || data.Inference!.Outputs == null)
             return;
 
         logger.LogInformation("Writing to SQL Server");

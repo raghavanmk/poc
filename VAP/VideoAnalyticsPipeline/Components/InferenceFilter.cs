@@ -131,7 +131,7 @@ internal class InferenceFilter(ModelConfig modelConfig, ILogger<InferenceFilter>
             return false;
         }
 
-        if (!counter.TryGetValue(cameraSerial, out var cachedTimestamp))
+        if (!counter.ContainsKey(cameraSerial))
         {
             counter[cameraSerial] = timestamp;
             return false;

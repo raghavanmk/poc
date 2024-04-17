@@ -10,15 +10,18 @@ internal class InferenceRules(ModelConfig modelConfig, InferenceFilter inference
 
         var cameraRules = modelConfig.CameraRules(data.CameraSerial!);
 
-        violations = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o) &&
-                                                         FilterInferences(o, data)).ToArray() ?? [];
-
-        if (cameraRules.Contains("ConfinedSpace"))
+        if(cameraRules.Contains("ConfinedSpace"))
         {
             confinedSpace = CountCheck(data, out Output[] outputs);
-            if (violations.Length == 0 && confinedSpace) violations = outputs;
+
+            violations = confinedSpace ? outputs : data.Inference?.Outputs?.Where(o => IfInferenceOutsideThreshold(classInference, o) && FilterInferences(o, data)).ToArray() ?? [];
         }
-        else confinedSpace = false;
+        else
+        {
+            confinedSpace = false;
+            violations = data.Inference!.Outputs!.Where(o => IfInferenceOutsideThreshold(classInference, o) &&
+                                                         FilterInferences(o, data)).ToArray() ?? [];
+        }
 
         return violations.Length > 0;
     }

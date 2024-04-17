@@ -32,7 +32,7 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
                     continue;
                 }
 
-                var classes = data.Inference!.Outputs.Select(x => x.Class);
+                var classes = data.Inference!.Outputs!.Select(x => x.Class);
 
                 var labels = GetLabels(classes, data.ConfinedSpace);
 
