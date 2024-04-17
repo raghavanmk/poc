@@ -50,14 +50,15 @@ internal class EmailNotifier(IConfiguration configuration, ChannelFactory channe
     {
         var labelsBuilder = new StringBuilder();
 
-        foreach (var cls in classes.Distinct())
+        if (confinedSpace) labelsBuilder.AppendLine("ConfinedSpace");
+        else
         {
-            labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);
+            foreach (var cls in classes.Distinct())
+            {
+                labelsBuilder.AppendLine(configuration[$"LabelMap:{cls}"]);
+            }
         }
 
-        if (confinedSpace) labelsBuilder.AppendLine("ConfinedSpace");
-
-        labelsBuilder.Length -= 2;
         return labelsBuilder.ToString();
 
     }
