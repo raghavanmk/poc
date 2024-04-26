@@ -31,7 +31,7 @@ public class InferenceRuleTests
                 ["Q2UV-5LPF-HURS"] = new CameraDetails { Location = "Depack Front Door CMB", Class = [1, 3] },
                 ["Q2UV-QYDA-Z3CF"] = new CameraDetails { Location = "Rail Dock East", Class = [1, 3] },
                 ["Q2UV-9LPF-KURS"] = new CameraDetails { Location = "Dummyy", Class = [1, 3] },
-                ["Q2UV-77ZC-7MVW"] = new CameraDetails { Location = "Pharma Cage", Class = [1, 3], CountClass = [0, 1] },
+                ["Q2UV-77ZC-7MVW"] = new CameraDetails { Location = "Pharma Cage", Class = [1, 3] },
             },
             ModelInference = new Dictionary<string, ModelInference>
             {

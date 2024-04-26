@@ -110,13 +110,6 @@ public class ModelConfig
             Emails[camera.Key] = emails.Distinct().ToArray();
         }
     }
-    public int[] CountClasses(string cameraSerial)
-    {
-        if (Camera!.TryGetValue(cameraSerial, out var camera))
-            return camera.CountClass!;
-
-        return Camera!["Shared"].Class!;
-    }
     public long? CountTimeout(string cameraSerial)
     {
         if (CameraFilter!.TryGetValue(cameraSerial, out var cameraFilter))
@@ -185,8 +178,6 @@ public class CameraDetails
     public int[]? Class { get; set; }
     public string? Location { get; set; }
     public string[]? EmailAlertGroup { get; set; }
-    public int[]? CountClass { get; set; }
-
 }
 
 public class CameraFilter
